@@ -21,16 +21,16 @@ bool isOnLine(VECTOR v, VECTOR v1, VECTOR v2)
 	return false;
 }
 
-bool isCross(LINE l1, LINE l2)
+bool getCrossPoint(VECTOR* v, LINE l1, LINE l2)
 {
+	double den = (l2.v2.e2 - l2.v1.e2)*(l1.v2.e1 - l1.v1.e1) - (l2.v2.e1 - l2.v1.e1)*(l1.v2.e2 - l1.v1.e2);
+	if (den == 0)
+		return false;
+	double s = ((l1.v2.e1 - l1.v1.e1)*(l1.v1.e2 - l2.v1.e2) - (l1.v2.e2 - l1.v1.e2)*(l1.v1.e1 - l2.v1.e1)) / den;
+	if (s < 0 || s > 1)
+		return false;
+	v->e1 = l2.v1.e1 + s * (l2.v2.e1 - l2.v1.e1);
+	v->e2 = l2.v1.e2 + s * (l2.v2.e2 - l2.v1.e2);
 
 	return true;
-}
-
-VECTOR getCrossPoint(LINE l1, LINE l2)
-{
-	VECTOR res;
-	res.e1 = (l1.v1.e1 - l2.v1.e1) - (l1.v1.e2 - l2.v1.e2) / (l1.getGradient() - l2.getGradient());
-	res.e2 = l1.v1.e1 + l1.getGradient() * (res.e1 - l1.v1.e1);
-	return res;
 }

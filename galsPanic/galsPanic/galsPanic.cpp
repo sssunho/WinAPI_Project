@@ -5,6 +5,7 @@
 #include "galsPanic.h"
 #include "interface.h"
 #include "controlTime.h"
+#include "VECTOR.h"
 
 #define MAX_LOADSTRING 100
 

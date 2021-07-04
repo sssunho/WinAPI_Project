@@ -76,14 +76,12 @@ public:
 	LINE() : v1(), v2() {};
 	LINE(VECTOR _v1, VECTOR _v2) : v1(_v1), v2(_v2) {};
 	LINE(double r) : v1(), v2(r) {};
-	LINE(double a, double b, double c);
-
+	
 	VECTOR getUnit() { return (v1 - v2).getUnit(); }
 	VECTOR getOrtho() { return (v1 - v2).getOrtho(); }
 	double getScalar() { return (v1 - v2).getScalar(); }
-	double getGradient() { return (v2.e2 - v1.e2) / (v2.e1 - v1.e1); }
-	friend VECTOR getCrossPoint(LINE l1, LINE l2);
-	friend bool isCross(LINE l1, LINE l2);
+	double rotate(double r) { v1 = v1.rotate(r); v2 = v2.rotate(r); }
+	friend bool getCrossPoint(VECTOR* v, LINE l1, LINE l2);
 
 };
 
