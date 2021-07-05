@@ -6,6 +6,8 @@
 #include "interface.h"
 #include "controlTime.h"
 #include "VECTOR.h"
+#include "gameObject.h"
+#include <iterator>
 
 #define MAX_LOADSTRING 100
 
@@ -73,6 +75,8 @@ void Run()
 {
 	HDC hdc = GetDC(g_hWnd);
 
+	static int cntTime = 0;
+
 	static float x = 100;
 	static float y = 100;
 
@@ -83,29 +87,147 @@ void Run()
 	time.set();
 	float ds = vel * dt;
 
+
+	static Land land;
+	static bool init = false;
+	if (!init)
+	{
+		init = true;
+		land.push_back({ 100,100 });
+		land.push_back({ 100,200 });
+		land.push_back({ 200,200 });
+		land.push_back({ 200,100 });
+	}
+
+	bool ttt = land.isOn({ 100,100 });
+
+	static Player actor(&land);
+	actor.update();
+	actor.collision(&actor);
+
+
 	DIRECTION key = getDirectionKeyState();
+
+
+	if (actor.isInvading() && key != actor.getDirection() && key != DIRECTION::NONE)
+	{
+		switch (key)
+		{
+
+		case DIRECTION::R:
+			actor.pushBorderPoint(actor.pos);
+			break;
+
+		case DIRECTION::L:
+			actor.pushBorderPoint(actor.pos);
+			break;
+
+		case DIRECTION::U:
+			actor.pushBorderPoint(actor.pos);
+			break;
+
+		case DIRECTION::D:
+			actor.pushBorderPoint(actor.pos);
+			break;
+		}
+
+	}
 
 	switch (key)
 	{
 
 	case DIRECTION::R:
-			x += ds;
-			break;
+		actor.vel = { 1, 0 };
+		actor.setDirection(key);
+		break;
 
 	case DIRECTION::L:
-			x -= ds;
-			break;
+		actor.vel = { -1, 0 };
+		actor.setDirection(key);
+		break;
 
 	case DIRECTION::U:
-			y -= ds;
-			break;
+		actor.vel = { 0, -1 };
+		actor.setDirection(key);
+		break;
 
 	case DIRECTION::D:
-			y += ds;
-			break;
+		actor.vel = { 0, 1 };
+		actor.setDirection(key);
+		break;
+
+	default:
+		if(!actor.isInvading())
+			actor.vel = { 0,0 };
+		break;
 	}
 
-	Rectangle(hdc, x, y, x + 100, y + 100);
+	if ((GetAsyncKeyState(VK_SPACE) & 0x8001) && !actor.isInvading())
+	{
+		switch (actor.getDirection())
+		{
+
+		case DIRECTION::R:
+			if (!land.isIn(actor.pos + VECTOR({ 1, 0 })))
+			{
+				actor.startInvading();
+				actor.vel = { 1, 0 };
+				actor.pushBorderPoint(actor.pos);
+			}
+			break;
+
+		case DIRECTION::L:
+			if (!land.isIn(actor.pos + VECTOR({ -1, 0 })))
+			{
+				actor.startInvading();
+				actor.vel = { -1, 0 };
+				actor.pushBorderPoint(actor.pos);
+			}
+			break;
+
+		case DIRECTION::U:
+			if (!land.isIn(actor.pos + VECTOR({ 0, -1 })))
+			{
+				actor.startInvading();
+				actor.vel = { 0, -1 };
+				actor.pushBorderPoint(actor.pos);
+			}
+			break;
+
+		case DIRECTION::D:
+			if (!land.isIn(actor.pos + VECTOR({ 0, 1 })))
+			{
+				actor.startInvading();
+				actor.vel = { 0, 1 };
+				actor.pushBorderPoint(actor.pos);
+			}
+			break;
+
+		}
+	}
+
+
+	if (actor.isInvading())
+	{
+		VECTOR temp = land.collision(&actor);
+		if (temp != VECTOR({0, 0}))
+		{
+			actor.endInvading(temp);
+		}
+	}
+
+	
+
+	if (cntTime > 20)
+	{
+		cntTime = 0;
+		land.draw(hdc);
+		actor.draw(hdc);
+
+	}
+	cntTime++;
+
+	//Rectangle(hdc, x, y, x + 100, y + 100);
 
 	ReleaseDC(g_hWnd, hdc);
 

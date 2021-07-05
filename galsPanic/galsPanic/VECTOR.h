@@ -32,6 +32,16 @@ public:
 		return e1*v.e1 + e2*v.e2;
 	}
 
+	bool operator!=(VECTOR v)
+	{
+		return (e1 != v.e1) || (e2 != v.e2);
+	}
+
+	bool operator==(VECTOR v)
+	{
+		return (e1 == v.e1) && (e2 == v.e2);
+	}
+
 	template<typename T>
 	friend VECTOR operator*(T k, VECTOR v);
 
@@ -65,6 +75,12 @@ public:
 
 };
 
+template<typename T>
+VECTOR operator*(T k, VECTOR v)
+{
+	VECTOR temp{ k*v.e1, k*v.e2 };
+	return temp;
+}
 
 class LINE
 {
@@ -82,6 +98,8 @@ public:
 	double getScalar() { return (v1 - v2).getScalar(); }
 	double rotate(double r) { v1 = v1.rotate(r); v2 = v2.rotate(r); }
 	friend bool getCrossPoint(VECTOR* v, LINE l1, LINE l2);
+	bool onLine(VECTOR v);
+
 
 };
 

@@ -7,18 +7,22 @@ VECTOR::VECTOR(double r)
 	e2 = sin(r);
 }
 
-template<typename T>
-VECTOR operator*(T k, VECTOR v)
+bool LINE::onLine(VECTOR v)
 {
-	VECTOR temp{ k*v.e1, k*v.e2 };
-	return temp;
-}
-
-bool isOnLine(VECTOR v, VECTOR v1, VECTOR v2)
-{
-	if (abs((v2.e2 - v1.e2) * (v.e1 - v1.e1) - (v.e2 - v1.e2)*(v2.e1 - v1.e1)) < 1.0e-3)
-		return true;
-	return false;
+	double t1 = (v.e1 - v1.e1) / (v2.e1 - v1.e1);
+	double t2 = (v.e2 - v1.e2) / (v2.e2 - v1.e2);
+	if (abs(v1.e1 - v2.e1) < 1.0e-5)
+	{
+		return abs(v.e1 - v1.e1) < 1.0e-5 && t2 >= 0 && t2 < 1;
+	}
+	else if (abs(v1.e2 - v2.e2) < 1.0e-5)
+	{
+		return abs(v.e2 - v1.e2) < 1.0e-5 && t1 >= 0 && t1 < 1;
+	}
+	else
+	{
+		return abs(t1 - t2) < 1.0e-1;
+	}
 }
 
 bool getCrossPoint(VECTOR* v, LINE l1, LINE l2)
@@ -26,11 +30,12 @@ bool getCrossPoint(VECTOR* v, LINE l1, LINE l2)
 	double den = (l2.v2.e2 - l2.v1.e2)*(l1.v2.e1 - l1.v1.e1) - (l2.v2.e1 - l2.v1.e1)*(l1.v2.e2 - l1.v1.e2);
 	if (den == 0)
 		return false;
-	double s = ((l1.v2.e1 - l1.v1.e1)*(l1.v1.e2 - l2.v1.e2) - (l1.v2.e2 - l1.v1.e2)*(l1.v1.e1 - l2.v1.e1)) / den;
-	if (s < 0 || s > 1)
+	double t = ((l2.v2.e1 - l2.v1.e1)*(l1.v1.e2 - l2.v1.e2) - (l1.v1.e1 - l2.v1.e1) * (l2.v2.e2 - l2.v1.e2)) / den;
+	double s = ((l2.v1.e1 - l1.v1.e1)*(l1.v2.e2 - l1.v1.e2) - (l2.v1.e2 - l1.v1.e2) * (l1.v2.e1 - l1.v1.e1)) / den;
+	if (t < 0 || t >=  1 || s < 0 || s >= 1)
 		return false;
-	v->e1 = l2.v1.e1 + s * (l2.v2.e1 - l2.v1.e1);
-	v->e2 = l2.v1.e2 + s * (l2.v2.e2 - l2.v1.e2);
+	v->e1 = l1.v1.e1 + t * (l1.v2.e1 - l1.v1.e1);
+	v->e2 = l1.v1.e2 + t * (l1.v2.e2 - l1.v1.e2);
 
 	return true;
 }
