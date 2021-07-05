@@ -94,9 +94,13 @@ void Run()
 	{
 		init = true;
 		land.push_back({ 100,100 });
-		land.push_back({ 100,200 });
-		land.push_back({ 200,200 });
-		land.push_back({ 200,100 });
+		land.push_back({ 100,250 });
+		land.push_back({ 300,250 });
+		land.push_back({ 300,200 });
+		land.push_back({ 150,200 });
+		land.push_back({ 150,150 });
+		land.push_back({ 300,150 });
+		land.push_back({ 300,100 });
 	}
 
 	bool ttt = land.isOn({ 100,100 });

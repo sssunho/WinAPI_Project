@@ -89,21 +89,46 @@ void Land::removePoints(list<VECTOR>::iterator start, list<VECTOR>::iterator end
 
 void Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints)
 {
-	double newArea = getPolygonArea(newPoints);
 	list<VECTOR>::iterator insStart = start == prev(points.end()) ? points.begin() : next(start);
 	list<VECTOR>::iterator insEnd = end == prev(points.end()) ? points.begin() : next(end);
-	if (newArea > 0)
+	if (newPoints.size() > 2)
 	{
-		for (list<VECTOR>::iterator it = newPoints.begin(); it != newPoints.end(); it++)
-			points.insert(insStart, *it);
-		removePoints(insStart, insEnd);
+		double newArea = getPolygonArea(newPoints);
+		if (newArea > 0)
+		{
+			for (list<VECTOR>::iterator it = newPoints.begin(); it != newPoints.end(); it++)
+				points.insert(insStart, *it);
+			removePoints(insStart, insEnd);
+		}
+		else if (newArea < 0)
+		{
+			for (list<VECTOR>::reverse_iterator it = newPoints.rbegin(); it != newPoints.rend(); it++)
+				points.insert(insEnd, *it);
+			removePoints(insEnd, insStart);
+
+		}
 	}
-	else if (newArea < 0)
+	else
 	{
-		for (list<VECTOR>::reverse_iterator it = newPoints.rbegin(); it != newPoints.rend(); it++)
-			points.insert(insEnd, *it);
-		removePoints(insEnd, insStart);
-	
+		list<VECTOR>::iterator it = insEnd;
+		while (it != insStart)
+		{
+			if (it == points.end())
+				it = points.begin();
+			newPoints.push_back(*it);
+			it++;
+		}
+		double newArea = getPolygonArea(newPoints);
+		if (newArea > 0)
+			points = newPoints;
+		else
+		{
+			points.insert(insStart, newPoints.front());
+			points.insert(insEnd, *(next(newPoints.begin())));
+			insStart = prev(insStart);
+			removePoints(insEnd, insStart);
+		}
+
 	}
 }
 
