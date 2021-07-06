@@ -89,7 +89,7 @@ void initBitmaps()
 }
 
 void initInst()
-{
+{/*
 	land.push_back({ 100,100 });
 	land.push_back({ 100,250 });
 	land.push_back({ 300,250 });
@@ -97,7 +97,34 @@ void initInst()
 	land.push_back({ 150,200 });
 	land.push_back({ 150,150 });
 	land.push_back({ 300,150 });
-	land.push_back({ 300,100 });
+	land.push_back({ 300,100 });*/
+/*
+	land.push_back({ 100,100 });
+	land.push_back({ 100,150 });
+	land.push_back({ 250,150 });
+	land.push_back({ 250,200 });
+	land.push_back({ 100,200 });
+	land.push_back({ 100,250 });
+	land.push_back({ 300,250 });
+	land.push_back({ 300,100 });*/
+
+	//land.push_back({ 100,100 });
+	//land.push_back({ 100,300 });
+	//land.push_back({ 250,300 });
+	//land.push_back({ 250,100 });
+	//land.push_back({ 200,100 });
+	//land.push_back({ 200,250 });
+	//land.push_back({ 150,250 });
+	//land.push_back({ 150,100 });
+
+	land.push_back({ 100,100 });
+	land.push_back({ 100,300 });
+	land.push_back({ 150,300 });
+	land.push_back({ 150,150 });
+	land.push_back({ 200,150 });
+	land.push_back({ 200,300 });
+	land.push_back({ 250,300 });
+	land.push_back({ 250,100 });
 	actor.setLand(&land);
 }
 
@@ -107,12 +134,14 @@ void Run()
 	
 	static int cntTime = 0;
 
-	actor.update();
 	actor.collision(&actor);
 
 	DIRECTION key = getDirectionKeyState();
 
 	playerContoller(key);
+
+	if (cntTime > 20)
+		actor.update();
 
 	if (actor.isInvading())
 	{

@@ -53,7 +53,7 @@ public:
 
 	void push_back(VECTOR v) { points.push_back(v); }
 	void removePoints(list<VECTOR>::iterator start, list<VECTOR>::iterator end);
-	void append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints);
+	list<VECTOR> append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints);
 	void append(Border* border);
 	double getArea();
 	bool isIn(VECTOR v);

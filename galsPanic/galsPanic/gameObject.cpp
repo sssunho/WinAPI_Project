@@ -89,6 +89,8 @@ VECTOR Land::collision(GameObject* obj)
 			{
 				return vtemp;
 			}
+			else if (l1.onLine(obj->pos) && temp->pBorder->getFront() != temp->pos)
+				return obj->pos;
 			end++; start++;
 
 		}
@@ -111,49 +113,56 @@ void Land::removePoints(list<VECTOR>::iterator start, list<VECTOR>::iterator end
 	}
 }
 
-void Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints)
+list<VECTOR> Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints)
 {
 	list<VECTOR>::iterator insStart = start == prev(points.end()) ? points.begin() : next(start);
 	list<VECTOR>::iterator insEnd = end == prev(points.end()) ? points.begin() : next(end);
-	if (newPoints.size() > 2)
+	list<VECTOR>::iterator it = insEnd;
+	list<VECTOR> rev = newPoints;
+
+	int initSize = newPoints.size();
+	while (it != insStart)
 	{
-		double newArea = getPolygonArea(newPoints);
-		if (newArea > 0)
+		newPoints.push_back(*it);
+		it++;
+		if (it == points.end())
+			it = points.begin();
+	}
+	
+	double newArea = getPolygonArea(newPoints);
+	if (newArea > 0)
+	{
+		if (insEnd == insStart)
 		{
-			for (list<VECTOR>::iterator it = newPoints.begin(); it != newPoints.end(); it++)
-				points.insert(insStart, *it);
-			removePoints(insStart, insEnd);
+			rev = newPoints;
 		}
-		else if (newArea < 0)
+		else
 		{
-			for (list<VECTOR>::reverse_iterator it = newPoints.rbegin(); it != newPoints.rend(); it++)
-				points.insert(insEnd, *it);
-			removePoints(insEnd, insStart);
+			while (it != insEnd)
+			{
+				rev.push_back(*it);
+				it++;
+				if (it == points.end())
+					it = points.begin();
+			}
 
 		}
+		removePoints(insStart, insEnd);
+		list<VECTOR>::iterator it = newPoints.begin();
+		end = insEnd;
+		for (int i = 0; i < initSize; i++)
+			points.insert(end, *(it++));
 	}
 	else
 	{
-		list<VECTOR>::iterator it = insEnd;
-		while (it != insStart)
-		{
-			if (it == points.end())
-				it = points.begin();
-			newPoints.push_back(*it);
-			it++;
-		}
-		double newArea = getPolygonArea(newPoints);
-		if (newArea > 0)
-			points = newPoints;
-		else
-		{
-			points.insert(insStart, newPoints.front());
-			points.insert(insEnd, *(next(newPoints.begin())));
-			insStart = insStart == points.begin() ? prev(points.end()) : prev(insStart);
-			removePoints(insEnd, insStart);
-		}
-
+		rev = newPoints;
+		removePoints(insEnd, insStart);
+		list<VECTOR>::iterator it = newPoints.begin();
+		for (int i = 0; i < initSize; i++)
+			points.insert(next(end), *(it++));
 	}
+
+	return rev;
 }
 
 void Land::append(Border* border)
@@ -318,7 +327,7 @@ void Player::draw(HDC& hdc)
 
 void Player::update()
 {
-	if (_time > 40)
+	if (1)
 	{
 		_time = 0;
 		if (invading)
