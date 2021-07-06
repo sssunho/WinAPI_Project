@@ -8,11 +8,17 @@
 #include "VECTOR.h"
 #include "gameObject.h"
 #include <iterator>
+#pragma comment(lib, "msimg32.lib")
 
 #define MAX_LOADSTRING 100
 
 // 함수 정의:
-void Run();
+void Run(); 
+void initBitmaps();
+void initInst();
+
+HBITMAP hLandScape;
+BITMAP bitLandScape;
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -20,6 +26,10 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 HWND g_hWnd;
 bool g_bLoop = true;
+
+// 전역 인스턴스 : 
+extern Land land;
+extern Player actor;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -52,6 +62,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
+	initBitmaps();
+	initInst();
+
     // 기본 메시지 루프입니다:
     while (g_bLoop)
     {
@@ -69,147 +82,37 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
+void initBitmaps()
+{
+	hLandScape = (HBITMAP)LoadImage(NULL, TEXT("images/test.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	GetObject(hLandScape, sizeof(BITMAP), &bitLandScape);
+}
 
+void initInst()
+{
+	land.push_back({ 100,100 });
+	land.push_back({ 100,250 });
+	land.push_back({ 300,250 });
+	land.push_back({ 300,200 });
+	land.push_back({ 150,200 });
+	land.push_back({ 150,150 });
+	land.push_back({ 300,150 });
+	land.push_back({ 300,100 });
+	actor.setLand(&land);
+}
 
 void Run()
 {
 	HDC hdc = GetDC(g_hWnd);
-
+	
 	static int cntTime = 0;
 
-	static float x = 100;
-	static float y = 100;
-
-	static TIMER time;
-
-	float vel = 800;
-	float dt = time.getElapsedTime() / 1000.0f;
-	time.set();
-	float ds = vel * dt;
-
-
-	static Land land;
-	static bool init = false;
-	if (!init)
-	{
-		init = true;
-		land.push_back({ 100,100 });
-		land.push_back({ 100,250 });
-		land.push_back({ 300,250 });
-		land.push_back({ 300,200 });
-		land.push_back({ 150,200 });
-		land.push_back({ 150,150 });
-		land.push_back({ 300,150 });
-		land.push_back({ 300,100 });
-	}
-
-	bool ttt = land.isOn({ 100,100 });
-
-	static Player actor(&land);
 	actor.update();
 	actor.collision(&actor);
 
-
 	DIRECTION key = getDirectionKeyState();
 
-
-	if (actor.isInvading() && key != actor.getDirection() && key != DIRECTION::NONE)
-	{
-		switch (key)
-		{
-
-		case DIRECTION::R:
-			actor.pushBorderPoint(actor.pos);
-			break;
-
-		case DIRECTION::L:
-			actor.pushBorderPoint(actor.pos);
-			break;
-
-		case DIRECTION::U:
-			actor.pushBorderPoint(actor.pos);
-			break;
-
-		case DIRECTION::D:
-			actor.pushBorderPoint(actor.pos);
-			break;
-		}
-
-	}
-
-	switch (key)
-	{
-
-	case DIRECTION::R:
-		actor.vel = { 1, 0 };
-		actor.setDirection(key);
-		break;
-
-	case DIRECTION::L:
-		actor.vel = { -1, 0 };
-		actor.setDirection(key);
-		break;
-
-	case DIRECTION::U:
-		actor.vel = { 0, -1 };
-		actor.setDirection(key);
-		break;
-
-	case DIRECTION::D:
-		actor.vel = { 0, 1 };
-		actor.setDirection(key);
-		break;
-
-	default:
-		if(!actor.isInvading())
-			actor.vel = { 0,0 };
-		break;
-	}
-
-	if ((GetAsyncKeyState(VK_SPACE) & 0x8001) && !actor.isInvading())
-	{
-		switch (actor.getDirection())
-		{
-
-		case DIRECTION::R:
-			if (!land.isIn(actor.pos + VECTOR({ 1, 0 })))
-			{
-				actor.startInvading();
-				actor.vel = { 1, 0 };
-				actor.pushBorderPoint(actor.pos);
-			}
-			break;
-
-		case DIRECTION::L:
-			if (!land.isIn(actor.pos + VECTOR({ -1, 0 })))
-			{
-				actor.startInvading();
-				actor.vel = { -1, 0 };
-				actor.pushBorderPoint(actor.pos);
-			}
-			break;
-
-		case DIRECTION::U:
-			if (!land.isIn(actor.pos + VECTOR({ 0, -1 })))
-			{
-				actor.startInvading();
-				actor.vel = { 0, -1 };
-				actor.pushBorderPoint(actor.pos);
-			}
-			break;
-
-		case DIRECTION::D:
-			if (!land.isIn(actor.pos + VECTOR({ 0, 1 })))
-			{
-				actor.startInvading();
-				actor.vel = { 0, 1 };
-				actor.pushBorderPoint(actor.pos);
-			}
-			break;
-
-		}
-	}
-
+	playerContoller(key);
 
 	if (actor.isInvading())
 	{
@@ -224,14 +127,40 @@ void Run()
 
 	if (cntTime > 20)
 	{
+		HDC buffer = CreateCompatibleDC(hdc);
+		HDC tempHDC = CreateCompatibleDC(hdc);
+		HDC mask = CreateCompatibleDC(hdc);
+		HBITMAP hOldBitmap;
+
+		HBITMAP tempbit = CreateCompatibleBitmap(hdc, 640, 480);
+		HBITMAP bufbit = CreateCompatibleBitmap(hdc, 640, 480);
+
+		int bx = bitLandScape.bmWidth;
+		int by = bitLandScape.bmHeight;
+
+		SelectObject(tempHDC, hLandScape);
+		SelectObject(buffer, bufbit);
+		SelectObject(mask, tempbit);
+		
+		land.draw(mask);
+
+		BitBlt(buffer, 0, 0, bx, by, tempHDC, 0, 0, SRCCOPY);
+		TransparentBlt(buffer, 0, 0, 640, 480, mask, 0, 0, 640, 480, RGB(255, 0, 255));
+
+
+		actor.draw(buffer);
+
+		BitBlt(hdc, 0, 0, bx, by, buffer, 0, 0, SRCCOPY);
+
+		DeleteObject(tempbit);
+		DeleteObject(bufbit);
+		DeleteDC(tempHDC);
+		DeleteDC(mask);
+		DeleteDC(buffer);
 		cntTime = 0;
-		land.draw(hdc);
-		actor.draw(hdc);
 
 	}
 	cntTime++;
-
-	//Rectangle(hdc, x, y, x + 100, y + 100);
 
 	ReleaseDC(g_hWnd, hdc);
 
@@ -277,8 +206,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
+   RECT rt = { 0, 0, 640, 480 };
+   AdjustWindowRect(&rt, WS_OVERLAPPEDWINDOW, false);
+
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, CW_USEDEFAULT, rt.right - rt.left, rt.bottom - rt.top, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {

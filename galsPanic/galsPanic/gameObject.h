@@ -124,6 +124,7 @@ public:
 
 	virtual VECTOR collision(GameObject* obj);
 	virtual void draw(HDC& hdc);
+	void setLand(Land* land) { pPlayerLand = land; pos = pos = land->points.front(); }
 
 	~Player()
 	{

@@ -4,6 +4,16 @@
 #include "VECTOR.h"
 #include <iterator>
 
+//======================================================================================
+//									Public Instance
+//======================================================================================
+
+Land land;
+Player actor;
+
+//======================================================================================
+//										General
+//======================================================================================
 
 void GameObject::update()
 {
@@ -12,13 +22,39 @@ void GameObject::update()
 	pos = pos + dt * vel;
 }
 
+
+double getPolygonArea(list<VECTOR> points)
+{
+	double area = 0;
+	list<VECTOR>::iterator pv1 = points.begin();
+	list<VECTOR>::iterator pv2 = next(pv1);
+	for (int i = 0; i < points.size(); i++)
+	{
+		area += 0.5*(pv2->e1 - pv1->e1)*(pv1->e2 + pv2->e2);
+		pv1++; pv2++;
+		if (pv2 == points.end())
+			pv2 = points.begin();
+	}
+	return area;
+}
+
+
+//======================================================================================
+//										Land
+//======================================================================================
+
 void Land::update()
 {
-	
+
 }
 
 void Land::draw(HDC& hdc)
 {
+	HBRUSH hBrush, oldBrush;
+
+	hBrush = CreateSolidBrush(RGB(255, 0, 255));
+	oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+
 	if (points.size() < 3)
 		return;
 	POINT* pp = new POINT[points.size()];
@@ -27,6 +63,9 @@ void Land::draw(HDC& hdc)
 	for (it = points.begin(); it != points.end(); it++)
 		pp[i++] = POINT(*it);
 	Polygon(hdc, pp, points.size());
+
+	SelectObject(hdc, oldBrush);
+	DeleteObject(hBrush);
 
 	delete[] pp;
 }
@@ -51,25 +90,10 @@ VECTOR Land::collision(GameObject* obj)
 				return vtemp;
 			}
 			end++; start++;
-			
+
 		}
 	}
 	return { 0,0 };
-}
-
-double getPolygonArea(list<VECTOR> points)
-{
-	double area = 0;
-	list<VECTOR>::iterator pv1 = points.begin();
-	list<VECTOR>::iterator pv2 = next(pv1);
-	for (int i = 0; i < points.size(); i++)
-	{
-		area += 0.5*(pv2->e1 - pv1->e1)*(pv1->e2 + pv2->e2);
-		pv1++; pv2++;
-		if (pv2 == points.end())
-			pv2 = points.begin();
-	}
-	return area;
 }
 
 double Land::getArea()
@@ -125,7 +149,7 @@ void Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list
 		{
 			points.insert(insStart, newPoints.front());
 			points.insert(insEnd, *(next(newPoints.begin())));
-			insStart = prev(insStart);
+			insStart = insStart == points.begin() ? prev(points.end()) : prev(insStart);
 			removePoints(insEnd, insStart);
 		}
 
@@ -202,6 +226,10 @@ list<VECTOR>::iterator Land::whereIs(VECTOR v)
 	return points.end();
 }
 
+//======================================================================================
+//										Border
+//======================================================================================
+
 void Border::draw(HDC& hdc)
 {
 
@@ -251,6 +279,10 @@ VECTOR Border::collision(GameObject* obj)
 	return { 0,0 };
 }
 
+//======================================================================================
+//										Actor
+//======================================================================================
+
 void Actor::draw(HDC& hdc)
 {
 	if (sprite != NULL)
@@ -268,8 +300,20 @@ void Actor::draw(HDC& hdc)
 
 VECTOR Actor::collision(GameObject* obj)
 {
-	
+
 	return { 0,0 };
+}
+
+//======================================================================================
+//										Player
+//======================================================================================
+
+void Player::draw(HDC& hdc)
+{
+	Actor::draw(hdc);
+	if (pBorder != NULL)
+		pBorder->draw(hdc);
+
 }
 
 void Player::update()
@@ -295,29 +339,29 @@ void Player::update()
 
 VECTOR Player::collision(GameObject* obj)
 {
-	if(pBorder != NULL)
-		pBorder->collision(this);
+	if (pBorder != NULL)
+	{
+		if (pBorder->collision(this) != VECTOR({0, 0}))
+		{
+			invading = !invading;
+			pos = pBorder->getFront();
+			delete pBorder;
+			pBorder = NULL;
+		}
+	}
 
 	return { 0,0 };
 }
 
-void Player::draw(HDC& hdc)
-{
-	Actor::draw(hdc);
-	if (pBorder != NULL)
-		pBorder->draw(hdc);
-
-}
-
 void Player::endInvading(VECTOR endPoint)
 {
-	invading = !invading; 
+	invading = !invading;
 
 	pBorder->push_back(endPoint);
 	pPlayerLand->append(pBorder);
 
 	pos = endPoint;
 
-	delete pBorder; 
+	delete pBorder;
 	pBorder = NULL;
 }
