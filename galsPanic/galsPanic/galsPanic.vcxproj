@@ -156,6 +156,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="galsPanic.h" />
     <ClInclude Include="gameObject.h" />
+    <ClInclude Include="gamePlay.h" />
     <ClInclude Include="interface.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -166,6 +167,7 @@
     <ClCompile Include="controlTime.cpp" />
     <ClCompile Include="galsPanic.cpp" />
     <ClCompile Include="gameObject.cpp" />
+    <ClCompile Include="gamePlay.cpp" />
     <ClCompile Include="interface.cpp" />
     <ClCompile Include="VECTOR.cpp" />
   </ItemGroup>

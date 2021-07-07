@@ -59,6 +59,8 @@ public:
 	bool isIn(VECTOR v);
 	bool isOn(VECTOR v);
 	list<VECTOR>::iterator whereIs(VECTOR v);
+
+	void reset();
 };
 
 class Border : public GameObject
@@ -78,6 +80,7 @@ public:
 	VECTOR getFront() { return points.front(); }
 	VECTOR getBack() { return points.back(); }
 	int getSize() { return points.size(); }
+	void reset();
 };
 
 class Actor : public GameObject
@@ -97,6 +100,7 @@ public:
 
 	DIRECTION getDirection() { return direction; }
 	void setDirection(DIRECTION dir) { direction = dir; }
+
 
 	~Actor() { if (sprite != NULL) delete sprite; }
 };
@@ -129,6 +133,8 @@ public:
 	virtual void draw(HDC& hdc);
 	void setLand(Land* land) { pPlayerLand = land; pos = pos = land->points.front(); }
 
+	void reset();
+
 	~Player()
 	{
 		if (pBorder != NULL)
@@ -142,12 +148,13 @@ class Enemy : public Actor
 private:
 	double r;
 public:
-	Enemy() : Actor() {};
+	Enemy() : Actor() { r = 30; };
 	Enemy(VECTOR v) : Actor(v) { r = 30; };
 	virtual void update();
 	virtual VECTOR collision(GameObject* obj);
 	virtual void draw(HDC& hdc);
 	double getR() { return r; }
+	void reset();
 };
 
 #endif

@@ -10,7 +10,7 @@
 
 Land land;
 Player actor;
-Enemy enemy(VECTOR({ 500,400 }));
+Enemy enemy;
 extern RECT rectView;
 
 //======================================================================================
@@ -263,6 +263,12 @@ list<VECTOR>::iterator Land::whereIs(VECTOR v)
 	return points.end();
 }
 
+void Land::reset()
+{
+	if (points.size() > 0)
+		points.clear();
+}
+
 //======================================================================================
 //										Border
 //======================================================================================
@@ -325,6 +331,12 @@ VECTOR Border::collision(GameObject* obj)
 		}
 	}
 	return { 0,0 };
+}
+
+void Border::reset()
+{
+	if (points.size() > 1)
+		points.clear();
 }
 
 //======================================================================================
@@ -429,6 +441,19 @@ void Player::endInvading(VECTOR endPoint)
 	pBorder = NULL;
 }
 
+void Player::reset()
+{
+	pPlayerLand = NULL;
+	if (pBorder != NULL)
+	{
+		pBorder->reset();
+		delete pBorder;
+		pBorder = NULL;
+	}
+	invading = false;
+	vel = { 0,0 };
+}
+
 //======================================================================================
 //										Enemy
 //======================================================================================
@@ -479,4 +504,9 @@ VECTOR Enemy::collision(GameObject* obj)
 			return vel;
 	}
 	return { 0,0 };
+}
+
+void Enemy::reset()
+{
+
 }

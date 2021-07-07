@@ -13,3 +13,7 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+#define areaOfWindow WINDOW_WIDTH * WINDOW_HEIGHT

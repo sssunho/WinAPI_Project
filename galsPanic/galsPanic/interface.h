@@ -7,4 +7,6 @@ DIRECTION getDirectionKeyState();
 
 void playerContoller(DIRECTION key);
 
+void initBitmaps();
+
 #endif

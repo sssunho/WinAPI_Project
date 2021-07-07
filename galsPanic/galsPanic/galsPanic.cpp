@@ -1,29 +1,14 @@
-﻿// galsPanic.cpp : 애플리케이션에 대한 진입점을 정의합니다.
-//
-
-#include "framework.h"
+﻿#include "framework.h"
 #include "galsPanic.h"
 #include "interface.h"
 #include "controlTime.h"
 #include "VECTOR.h"
 #include "gameObject.h"
+#include "gamePlay.h"
 #include <iterator>
 #pragma comment(lib, "msimg32.lib")
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
-
 #define MAX_LOADSTRING 100
-
-// 함수 정의:
-void MainMenu();
-void GameClear();
-void Run(); 
-void initBitmaps();
-void initInst();
-
-HBITMAP hLandScape;
-BITMAP bitLandScape;
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -34,7 +19,6 @@ bool g_bLoop = true;
 RECT rectView;
 void(*UPDATE) ();
 
-const int areaOfWindow = WINDOW_WIDTH * WINDOW_HEIGHT;
 
 // 전역 인스턴스 : 
 extern Land land;
@@ -72,9 +56,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-	initBitmaps();
-	initInst();
-	UPDATE = Run;
+	initMenu();
+	UPDATE = MainMenu;
 
     // 기본 메시지 루프입니다:
     while (g_bLoop)
@@ -91,115 +74,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     return (int) msg.wParam;
-}
-
-void initBitmaps()
-{
-	hLandScape = (HBITMAP)LoadImage(NULL, TEXT("images/test.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-	GetObject(hLandScape, sizeof(BITMAP), &bitLandScape);
-}
-
-void initInst()
-{	
-	land.push_back({ 100,100 });
-	land.push_back({ 100,300 });
-	land.push_back({ 150,300 });
-	land.push_back({ 150,150 });
-	land.push_back({ 200,150 });
-	land.push_back({ 200,300 });
-	land.push_back({ 250,300 });
-	land.push_back({ 250,100 });
-	actor.setLand(&land);
-}
-
-void Run()
-{
-	HDC hdc = GetDC(g_hWnd);
-	
-	static int cntTime = 0;
-	const int updateTime = 100;
-
-	actor.collision(&actor);
-
-	DIRECTION key = getDirectionKeyState();
-
-	static bool initi = false;
-	if (!initi)
-	{
-		initi = true;
-		enemy.vel = { -1,1 };
-	}
-
-	playerContoller(key);
-
-	if (cntTime > updateTime) // update
-	{
-		actor.update();
-		enemy.update();
-	}
-
-	if (cntTime > updateTime) // collision
-	{
-		if (actor.isInvading())
-			actor.collision(&enemy);
-		if (actor.isInvading())
-		{
-			VECTOR temp = land.collision(&actor);
-			if (temp != VECTOR({ 0, 0 }))
-			{
-				actor.endInvading(temp);
-			}
-		}
-		VECTOR n = land.collision(&enemy);
-		if (n != VECTOR({ 0, 0 }))
-		{
-			double psi = n.getRad();
-			enemy.vel = enemy.vel.rotate(-psi);
-			enemy.vel.e1 = -enemy.vel.e1;
-			enemy.vel = enemy.vel.rotate(psi);
-		}
-		enemy.vel = enemy.collision(&enemy);
-
-	}
-
-	if (cntTime > updateTime) // draw
-	{
-		HDC buffer = CreateCompatibleDC(hdc);
-		HDC tempHDC = CreateCompatibleDC(hdc);
-		HDC mask = CreateCompatibleDC(hdc);
-		HBITMAP tempbit = CreateCompatibleBitmap(hdc, 640, 480);
-		HBITMAP bufbit = CreateCompatibleBitmap(hdc, 640, 480);
-
-		int bx = bitLandScape.bmWidth;
-		int by = bitLandScape.bmHeight;
-
-		SelectObject(tempHDC, hLandScape);
-		SelectObject(buffer, bufbit);
-		SelectObject(mask, tempbit);
-		
-		land.draw(mask);
-
-		BitBlt(buffer, 0, 0, bx, by, tempHDC, 0, 0, SRCCOPY);
-		TransparentBlt(buffer, 0, 0, 640, 480, mask, 0, 0, 640, 480, RGB(255, 0, 255));
-
-
-		actor.draw(buffer);
-		enemy.draw(buffer);
-
-		BitBlt(hdc, 0, 0, bx, by, buffer, 0, 0, SRCCOPY);
-
-		DeleteObject(tempbit);
-		DeleteObject(bufbit);
-		DeleteDC(tempHDC);
-		DeleteDC(mask);
-		DeleteDC(buffer);
-		cntTime = 0;
-
-	}
-	cntTime++;
-
-	ReleaseDC(g_hWnd, hdc);
-
 }
 
 //
@@ -255,6 +129,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    g_hWnd = hWnd;
    GetClientRect(hWnd, &rectView);
+   initBitmaps();
 
 
    ShowWindow(hWnd, nCmdShow);
@@ -302,10 +177,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+
+
+	case WM_CHAR:
+		if (UPDATE == MainMenu)
+		{
+			initGame();
+			UPDATE = Run;
+		}
+		if (UPDATE == GameClear)
+		{
+			initMenu();
+			UPDATE = MainMenu;
+		}
+		break;
+
     case WM_DESTROY:
 		g_bLoop = false;
         PostQuitMessage(0);
         break;
+
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }

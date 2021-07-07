@@ -5,6 +5,25 @@
 extern Player actor;
 extern Land land;
 
+HBITMAP hLandScape;
+HBITMAP hTitle;
+HBITMAP hClear;
+BITMAP bitLandScape;
+BITMAP bitTitle;
+BITMAP bitClear;
+
+
+void initBitmaps()
+{
+	hLandScape = (HBITMAP)LoadImage(NULL, TEXT("images/test.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	GetObject(hLandScape, sizeof(BITMAP), &bitLandScape);
+	hTitle = (HBITMAP)LoadImage(NULL, TEXT("images/title.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	GetObject(hTitle, sizeof(BITMAP), &bitTitle);
+	hClear = (HBITMAP)LoadImage(NULL, TEXT("images/win.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+	GetObject(hClear, sizeof(BITMAP), &bitClear);
+}
+
+
 DIRECTION getDirectionKeyState()
 {
 	int l = 8 * ((GetAsyncKeyState(VK_LEFT) & 0x8001) > 0);
