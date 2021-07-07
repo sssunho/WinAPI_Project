@@ -5,11 +5,13 @@
 #include <iterator>
 
 //======================================================================================
-//									Public Instance
+//										Public
 //======================================================================================
 
 Land land;
 Player actor;
+Enemy enemy(VECTOR({ 500,400 }));
+extern RECT rectView;
 
 //======================================================================================
 //										General
@@ -93,6 +95,32 @@ VECTOR Land::collision(GameObject* obj)
 				return obj->pos;
 			end++; start++;
 
+		}
+	}
+	else if (Enemy* pEnemy = dynamic_cast<Enemy*>(obj))
+	{
+		list<VECTOR>::iterator start = points.begin();
+		list<VECTOR>::iterator end = next(start);
+		for (int i = 0; i < points.size(); i++)
+		{
+			LINE l(*start, *end);
+			VECTOR proj = l.getPointProj(obj->pos);
+			VECTOR n;
+			if ( proj != VECTOR({-1, -1}))
+				n = obj->pos - proj;
+			else
+				n = obj->pos - *start;
+
+			if (n.getScalar() < pEnemy->getR())
+			{
+				VECTOR temp = pEnemy->vel.rotate(-n.getRad());
+				if(temp.e1 < 0)
+					return n;
+			}
+
+			start++; end++;
+			if (end == points.end())
+				end = points.begin();
 		}
 	}
 	return { 0,0 };
@@ -285,6 +313,17 @@ VECTOR Border::collision(GameObject* obj)
 			start++; end++;
 		}
 	}
+	else if (Enemy* pEnemy = dynamic_cast<Enemy*>(obj))
+	{
+		list<VECTOR>::iterator start = points.begin();
+		list<VECTOR>::iterator end = next(start);
+		for (int i = 0; i < points.size(); i++)
+		{
+
+
+			start++; end++;
+		}
+	}
 	return { 0,0 };
 }
 
@@ -319,7 +358,16 @@ VECTOR Actor::collision(GameObject* obj)
 
 void Player::draw(HDC& hdc)
 {
-	Actor::draw(hdc);
+	if (sprite != NULL)
+	{
+		Graphics G(hdc);
+		G.DrawImage(sprite, 0, 0);
+	}
+	else
+	{
+		POINT po = POINT(pos);
+		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
+	}
 	if (pBorder != NULL)
 		pBorder->draw(hdc);
 
@@ -327,39 +375,45 @@ void Player::draw(HDC& hdc)
 
 void Player::update()
 {
-	if (1)
+	if (invading)
 	{
-		_time = 0;
-		if (invading)
-		{
-			pos = pos + vel;
-		}
-		else
-		{
-			if (pPlayerLand->isOn(pos + vel))
-				pos = pos + vel;
-		}
+		pos = pos + vel;
 	}
 	else
 	{
-		_time++;
+		if (pPlayerLand->isOn(pos + vel))
+			pos = pos + vel;
 	}
 }
 
 VECTOR Player::collision(GameObject* obj)
 {
-	if (pBorder != NULL)
+	if (dynamic_cast<Player*>(obj))
 	{
-		if (pBorder->collision(this) != VECTOR({0, 0}))
+		if (pBorder != NULL)
 		{
-			invading = !invading;
-			pos = pBorder->getFront();
-			delete pBorder;
-			pBorder = NULL;
+			bool outOfRect = pos.e1 < rectView.left || pos.e1 > rectView.right || pos.e2 < rectView.top || pos.e2 > rectView.bottom;
+			if (pBorder->collision(this) != VECTOR({ 0, 0 }) || outOfRect)
+			{
+				resetInvading();
+			}
 		}
+	}
+	else if (Enemy* pEnemy = dynamic_cast<Enemy*>(obj))
+	{
+		if ((pos - pEnemy->pos).getScalar() < r + pEnemy->getR())
+			resetInvading();
 	}
 
 	return { 0,0 };
+}
+
+void Player::resetInvading()
+{
+	invading = !invading;
+	pos = pBorder->getFront();
+	delete pBorder;
+	pBorder = NULL;
 }
 
 void Player::endInvading(VECTOR endPoint)
@@ -373,4 +427,56 @@ void Player::endInvading(VECTOR endPoint)
 
 	delete pBorder;
 	pBorder = NULL;
+}
+
+//======================================================================================
+//										Enemy
+//======================================================================================
+
+void Enemy::draw(HDC& hdc)
+{
+	if (sprite != NULL)
+	{
+
+	}
+	else
+	{
+		POINT po = POINT(pos);
+		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
+		
+	}
+}
+
+void Enemy::update()
+{
+	pos = pos + vel;
+}
+
+VECTOR Enemy::collision(GameObject* obj)
+{
+	if (Player* pPlayer = dynamic_cast<Player*>(obj))
+	{
+		pPlayer->collision(this);
+	}
+	else if (Land* pLand = dynamic_cast<Land*>(obj))
+	{
+		pLand->collision(this);
+	}
+	else if (obj == this)
+	{
+		if (pos.e1 - r < rectView.left && vel.e1 < 0)
+			return { -vel.e1 , vel.e2 };
+
+		else if (pos.e1 + r > rectView.right && vel.e1 > 0)
+			return { -vel.e1 , vel.e2 };
+
+		else if (pos.e2 - r < rectView.top && vel.e2 < 0)
+			return { vel.e1 , -vel.e2 };
+
+		else if (pos.e2 + r > rectView.bottom && vel.e2 > 0)
+			return { vel.e1 , -vel.e2 };
+		else
+			return vel;
+	}
+	return { 0,0 };
 }

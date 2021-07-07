@@ -10,9 +10,14 @@
 #include <iterator>
 #pragma comment(lib, "msimg32.lib")
 
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+
 #define MAX_LOADSTRING 100
 
 // 함수 정의:
+void MainMenu();
+void GameClear();
 void Run(); 
 void initBitmaps();
 void initInst();
@@ -26,10 +31,15 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 HWND g_hWnd;
 bool g_bLoop = true;
+RECT rectView;
+void(*UPDATE) ();
+
+const int areaOfWindow = WINDOW_WIDTH * WINDOW_HEIGHT;
 
 // 전역 인스턴스 : 
 extern Land land;
 extern Player actor;
+extern Enemy enemy;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -64,6 +74,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	initBitmaps();
 	initInst();
+	UPDATE = Run;
 
     // 기본 메시지 루프입니다:
     while (g_bLoop)
@@ -75,7 +86,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		else
 		{
-			Run();
+			UPDATE();
 		}
     }
 
@@ -89,34 +100,7 @@ void initBitmaps()
 }
 
 void initInst()
-{/*
-	land.push_back({ 100,100 });
-	land.push_back({ 100,250 });
-	land.push_back({ 300,250 });
-	land.push_back({ 300,200 });
-	land.push_back({ 150,200 });
-	land.push_back({ 150,150 });
-	land.push_back({ 300,150 });
-	land.push_back({ 300,100 });*/
-/*
-	land.push_back({ 100,100 });
-	land.push_back({ 100,150 });
-	land.push_back({ 250,150 });
-	land.push_back({ 250,200 });
-	land.push_back({ 100,200 });
-	land.push_back({ 100,250 });
-	land.push_back({ 300,250 });
-	land.push_back({ 300,100 });*/
-
-	//land.push_back({ 100,100 });
-	//land.push_back({ 100,300 });
-	//land.push_back({ 250,300 });
-	//land.push_back({ 250,100 });
-	//land.push_back({ 200,100 });
-	//land.push_back({ 200,250 });
-	//land.push_back({ 150,250 });
-	//land.push_back({ 150,100 });
-
+{	
 	land.push_back({ 100,100 });
 	land.push_back({ 100,300 });
 	land.push_back({ 150,300 });
@@ -133,34 +117,56 @@ void Run()
 	HDC hdc = GetDC(g_hWnd);
 	
 	static int cntTime = 0;
+	const int updateTime = 100;
 
 	actor.collision(&actor);
 
 	DIRECTION key = getDirectionKeyState();
 
-	playerContoller(key);
-
-	if (cntTime > 20)
-		actor.update();
-
-	if (actor.isInvading())
+	static bool initi = false;
+	if (!initi)
 	{
-		VECTOR temp = land.collision(&actor);
-		if (temp != VECTOR({0, 0}))
-		{
-			actor.endInvading(temp);
-		}
+		initi = true;
+		enemy.vel = { -1,1 };
 	}
 
-	
+	playerContoller(key);
 
-	if (cntTime > 20)
+	if (cntTime > updateTime) // update
+	{
+		actor.update();
+		enemy.update();
+	}
+
+	if (cntTime > updateTime) // collision
+	{
+		if (actor.isInvading())
+			actor.collision(&enemy);
+		if (actor.isInvading())
+		{
+			VECTOR temp = land.collision(&actor);
+			if (temp != VECTOR({ 0, 0 }))
+			{
+				actor.endInvading(temp);
+			}
+		}
+		VECTOR n = land.collision(&enemy);
+		if (n != VECTOR({ 0, 0 }))
+		{
+			double psi = n.getRad();
+			enemy.vel = enemy.vel.rotate(-psi);
+			enemy.vel.e1 = -enemy.vel.e1;
+			enemy.vel = enemy.vel.rotate(psi);
+		}
+		enemy.vel = enemy.collision(&enemy);
+
+	}
+
+	if (cntTime > updateTime) // draw
 	{
 		HDC buffer = CreateCompatibleDC(hdc);
 		HDC tempHDC = CreateCompatibleDC(hdc);
 		HDC mask = CreateCompatibleDC(hdc);
-		HBITMAP hOldBitmap;
-
 		HBITMAP tempbit = CreateCompatibleBitmap(hdc, 640, 480);
 		HBITMAP bufbit = CreateCompatibleBitmap(hdc, 640, 480);
 
@@ -178,6 +184,7 @@ void Run()
 
 
 		actor.draw(buffer);
+		enemy.draw(buffer);
 
 		BitBlt(hdc, 0, 0, bx, by, buffer, 0, 0, SRCCOPY);
 
@@ -235,7 +242,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   RECT rt = { 0, 0, 640, 480 };
+   RECT rt = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
    AdjustWindowRect(&rt, WS_OVERLAPPEDWINDOW, false);
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
@@ -247,7 +254,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    }
 
    g_hWnd = hWnd;
-
+   GetClientRect(hWnd, &rectView);
 
 
    ShowWindow(hWnd, nCmdShow);

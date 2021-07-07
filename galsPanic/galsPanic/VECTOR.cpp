@@ -39,3 +39,15 @@ bool getCrossPoint(VECTOR* v, LINE l1, LINE l2)
 
 	return true;
 }
+
+VECTOR LINE::getPointProj(VECTOR v)
+{
+	if (v1 == v2)
+		return { -1,-1 };
+	double d = (v2 - v1).getScalar();
+	double t = (v - v1) * (v2 - v1) / (d*d);
+	if (t >= 0 && t < 1)
+		return v1 + t * (v2 - v1);
+	else
+		return { -1, -1 };
+}

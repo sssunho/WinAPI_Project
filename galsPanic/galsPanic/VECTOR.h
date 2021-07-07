@@ -55,6 +55,13 @@ public:
 		return (1 / getScalar())*(*this);
 	}
 
+	double getRad()
+	{
+		if (e1 == 0)
+			return e2 > 0 ? PI / 2 : -PI / 2;
+		return PI * (e1 < 0) + atan(e2 / e1);
+	}
+
 	VECTOR rotate(double r)
 	{
 		return { cos(r)*e1 - sin(r)*e2, sin(r)*e1 + cos(r)*e2 };
@@ -99,7 +106,7 @@ public:
 	double rotate(double r) { v1 = v1.rotate(r); v2 = v2.rotate(r); }
 	friend bool getCrossPoint(VECTOR* v, LINE l1, LINE l2);
 	bool onLine(VECTOR v);
-
+	VECTOR getPointProj(VECTOR v);
 
 };
 

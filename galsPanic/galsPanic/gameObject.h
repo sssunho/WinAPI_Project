@@ -82,13 +82,14 @@ public:
 
 class Actor : public GameObject
 {
-private:
+protected:
 	Image* sprite;
 	DIRECTION direction;
 
 public:
 	Actor() : GameObject(), sprite(NULL), direction(DIRECTION::NONE) {};
 	Actor(WCHAR* filename) : GameObject(), direction(DIRECTION::NONE) { sprite = Image::FromFile(filename); }
+	Actor(VECTOR v) : GameObject(), direction(DIRECTION::NONE), sprite(NULL) { pos = v; }
 
 	virtual void update() { GameObject::update(); };
 	virtual void draw(HDC& hdc);
@@ -110,10 +111,12 @@ private:
 	int _time;
 	Land* pPlayerLand;
 	Border* pBorder;
+	double r;
+	void resetInvading();
 
 public:
-	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL) { _time = 0; };
-	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL) { pos = land->points.front(); _time = 0; }
+	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL) { _time = 0; r = 10; };
+	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL) { pos = land->points.front(); _time = 0; r = 10; }
 	virtual void update();
 	bool isInvading() { return invading; }
 	void startInvading() { invading = !invading; pBorder = new Border; }
@@ -132,6 +135,19 @@ public:
 			delete pBorder;
 	}
 
+};
+
+class Enemy : public Actor
+{
+private:
+	double r;
+public:
+	Enemy() : Actor() {};
+	Enemy(VECTOR v) : Actor(v) { r = 30; };
+	virtual void update();
+	virtual VECTOR collision(GameObject* obj);
+	virtual void draw(HDC& hdc);
+	double getR() { return r; }
 };
 
 #endif
