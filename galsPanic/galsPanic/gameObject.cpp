@@ -3,6 +3,7 @@
 #include "interface.h"
 #include "VECTOR.h"
 #include <iterator>
+#include <exception>
 
 //======================================================================================
 //										Public
@@ -211,6 +212,10 @@ void Land::append(Border* border)
 	list<VECTOR>::iterator start = whereIs(border->getFront());
 	list<VECTOR>::iterator end = whereIs(border->getBack());
 	append(start, end, border->points);
+	points.unique();
+	if (points.front() == points.back())
+		points.pop_back();
+	clearOnLine();
 }
 
 bool Land::isIn(VECTOR v)
@@ -226,7 +231,10 @@ bool Land::isIn(VECTOR v)
 			end = points.begin();
 		LINE l2(*start, *end);
 		if (l2.onLine(v))
+		{
+			l2.onLine(v);
 			return true;
+		}
 		if (getCrossPoint(&temp, l1, l2))
 			count++;
 		start++; end++;
@@ -270,6 +278,12 @@ list<VECTOR>::iterator Land::whereIs(VECTOR v)
 			if (t < 1 && t >= 0)
 				return start;
 		}
+		if (start == points.end())
+		{
+			int i = 0;
+			i = 1234;
+		}
+			
 		start++; end++;
 	}
 	return points.end();
@@ -279,6 +293,37 @@ void Land::reset()
 {
 	if (points.size() > 0)
 		points.clear();
+}
+
+void Land::clearOnLine()
+{
+	list<VECTOR>::iterator ptr = points.begin();
+	list<VECTOR>::iterator pre = prev(points.end());
+	list<VECTOR>::iterator nxt = next(ptr);
+	while(ptr != points.end())
+	{
+		if (ptr == points.end())
+			ptr = points.begin();
+		else if (pre == points.end())
+			pre = points.begin();
+		else if (nxt == points.end())
+			nxt = points.begin();
+
+		if (LINE(*pre, *nxt).onLine(*ptr))
+		{
+			ptr = points.erase(ptr);
+		}
+		else
+			ptr++;
+
+		if (ptr == points.end())
+			break;
+		else
+		{
+			pre = ptr == points.begin() ? prev(points.end()) : prev(ptr);
+			nxt = next(ptr);
+		}
+	}
 }
 
 //======================================================================================
@@ -401,22 +446,63 @@ void Player::update()
 {
 	if (invading)
 	{
-		pos = pos + vel;
+		pos = pos + updateTime*vel;
 	}
 	else
 	{
 		list<VECTOR>::iterator imOn = pPlayerLand->whereIs(pos);
 		list<VECTOR>::iterator prevTo = next(imOn);
+		list<VECTOR>::iterator nextTo = imOn == pPlayerLand->points.begin() ? prev(pPlayerLand->points.end()) : prev(imOn);
 		if (prevTo == pPlayerLand->points.end())
 			prevTo = pPlayerLand->points.begin();
-		VECTOR v = (*prevTo - *imOn).getUnit();
-		
-		if (pPlayerLand->isOn(pos + vel))
-			pos = pos + vel;
-/*
-		VECTOR projVel = (v*vel)*v;
-		VECTOR dest = pos + (updateTime*projVel);
-		pos = pos;*/
+		if (pos == *imOn)
+		{
+			VECTOR v1 = (*prevTo - *imOn).getUnit();
+			VECTOR v2 = (*nextTo - *imOn).getUnit();
+			VECTOR proj1 = (v1*vel)*v1;
+			VECTOR proj2 = (v2*vel)*v2;
+			VECTOR next;
+
+			if (proj1.getScalar() >= proj2.getScalar())
+			{
+				vel = proj1;
+				next = *prevTo;
+			}
+			else
+			{
+				vel = proj2;
+				next = *nextTo;
+			}
+			pos = pos + updateTime * vel;
+			LINE l(*imOn, next);
+			double t = l.getT(pos);
+			if (t >= 1)
+				pos = next;
+			else if (t <= 0)
+				pos = *imOn;
+			if (!l.onLine(pos))
+			{
+				int i = 0;
+				i = 1234;
+			}
+		}
+		else
+		{
+			VECTOR v = (*prevTo - *imOn).getUnit();
+			vel = (v*vel)*v;
+			pos = pos + updateTime * vel;
+			LINE l(*imOn, *prevTo);
+			double t = l.getT(pos);
+			if (t >= 1)
+				pos = *prevTo;
+			else if (t <= 0)
+				pos = *imOn;
+			if (!l.onLine(pos))
+			{
+				int i = 0;
+				i = 1234;
+			}
+		}
 	}
 }
 
@@ -427,6 +513,7 @@ VECTOR Player::collision(GameObject* obj)
 		if (pBorder != NULL)
 		{
 			bool outOfRect = pos.e1 < rectView.left || pos.e1 > rectView.right || pos.e2 < rectView.top || pos.e2 > rectView.bottom;
+			VECTOR check = pBorder->collision(this);
 			if (pBorder->collision(this) != VECTOR({ 0, 0 }) || outOfRect)
 			{
 				resetInvading();

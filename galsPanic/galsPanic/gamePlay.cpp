@@ -59,7 +59,7 @@ void initGame()
 			break;
 	actor.reset();
 	land.reset();
-	enemy.reset();
+	enemy.reset();/*
 	land.push_back({ 100,100 });
 	land.push_back({ 100,300 });
 	land.push_back({ 150,300 });
@@ -67,12 +67,19 @@ void initGame()
 	land.push_back({ 200,150 });
 	land.push_back({ 200,300 });
 	land.push_back({ 250,300 });
-	land.push_back({ 250,100 });
+	land.push_back({ 250,100 });*/
+
+
+	land.push_back({ 100,100 });
+	land.push_back({ 100,300 });
+	land.push_back({ 300,300 });
+
+
 	actor.setLand(&land);
-	actor.vel = { 0,0 };
-	enemy.pos = { 450, 400 };
-	//enemy.vel = { 300, 300 };
-	enemy.vel = { 0, 0 };
+	actor.vel = { 300, 300 };
+	enemy.pos = { 500, 300 };
+	enemy.vel = { -300, -300 };
+	updateTimer.set();
 }
 
 void MainMenu()
@@ -134,6 +141,7 @@ void Run()
 				VECTOR temp = land.collision(&actor);
 				if (temp != VECTOR({ 0, 0 }))
 				{
+					land.collision(&actor);
 					actor.endInvading(temp);
 				}
 			}

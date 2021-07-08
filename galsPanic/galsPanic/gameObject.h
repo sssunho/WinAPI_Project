@@ -45,6 +45,7 @@ class Land : public GameObject
 	friend class Player;
 private:
 	list<VECTOR> points;
+	void clearOnLine();
 
 public:
 	Land() : GameObject(), points() {};

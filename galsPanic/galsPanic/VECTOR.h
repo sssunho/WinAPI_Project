@@ -107,6 +107,7 @@ public:
 	friend bool getCrossPoint(VECTOR* v, LINE l1, LINE l2);
 	bool onLine(VECTOR v);
 	VECTOR getPointProj(VECTOR v);
+	double getT(VECTOR v);
 
 };
 

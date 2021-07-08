@@ -21,7 +21,7 @@ bool LINE::onLine(VECTOR v)
 	}
 	else
 	{
-		return abs(t1 - t2) < 1.0e-1;
+		return abs(t1 - t2) < 1.0e-5 && t1 >= 0 && t1 < 1;
 	}
 }
 
@@ -50,4 +50,22 @@ VECTOR LINE::getPointProj(VECTOR v)
 		return v1 + t * (v2 - v1);
 	else
 		return { -1, -1 };
+}
+
+double LINE::getT(VECTOR v)
+{
+	double t1 = (v.e1 - v1.e1) / (v2.e1 - v1.e1);
+	double t2 = (v.e2 - v1.e2) / (v2.e2 - v1.e2);
+	if (abs(v1.e1 - v2.e1) < 1.0e-9)
+	{
+		return t2;
+	}
+	else if (abs(v1.e2 - v2.e2) < 1.0e-9)
+	{
+		return t1;
+	}
+	else
+	{
+		return t1;
+	}
 }
