@@ -71,7 +71,8 @@ void initGame()
 	actor.setLand(&land);
 	actor.vel = { 0,0 };
 	enemy.pos = { 450, 400 };
-	enemy.vel = { 300, 300 };
+	//enemy.vel = { 300, 300 };
+	enemy.vel = { 0, 0 };
 }
 
 void MainMenu()

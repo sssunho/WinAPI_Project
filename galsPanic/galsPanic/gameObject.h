@@ -48,6 +48,7 @@ private:
 
 public:
 	Land() : GameObject(), points() {};
+	Land(list<VECTOR> p) : GameObject(), points(p) {};
 
 	virtual void update();
 	virtual void draw(HDC& hdc);

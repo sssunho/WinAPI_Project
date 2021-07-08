@@ -146,6 +146,20 @@ list<VECTOR> Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator e
 	list<VECTOR>::iterator it = insEnd;
 	list<VECTOR> rev = newPoints;
 
+
+	if (insStart == insEnd)
+	{
+		if (Land(newPoints).isIn(*insStart))
+		{
+			rev = points;
+			if (getPolygonArea(newPoints) < 0)
+				newPoints.reverse();
+			points = newPoints;
+			return rev;
+
+		}
+	}
+
 	int initSize = newPoints.size();
 	while (it != insStart)
 	{
@@ -154,7 +168,8 @@ list<VECTOR> Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator e
 		if (it == points.end())
 			it = points.begin();
 	}
-	
+
+		
 	double newArea = getPolygonArea(newPoints);
 	if (newArea > 0)
 	{
@@ -394,8 +409,14 @@ void Player::update()
 		list<VECTOR>::iterator prevTo = next(imOn);
 		if (prevTo == pPlayerLand->points.end())
 			prevTo = pPlayerLand->points.begin();
+		VECTOR v = (*prevTo - *imOn).getUnit();
+		
 		if (pPlayerLand->isOn(pos + vel))
 			pos = pos + vel;
+/*
+		VECTOR projVel = (v*vel)*v;
+		VECTOR dest = pos + (updateTime*projVel);
+		pos = pos;*/
 	}
 }
 
