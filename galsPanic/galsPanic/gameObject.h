@@ -15,6 +15,8 @@ using std::list;
 using std::next;
 using namespace Gdiplus;
 
+extern double updateTime;
+
 class Border;
 class Player;
 

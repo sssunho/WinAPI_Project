@@ -19,9 +19,7 @@ extern RECT rectView;
 
 void GameObject::update()
 {
-	float dt = time.getElapsedTime() / 1000.0f;
-	time.set();
-	pos = pos + dt * vel;
+	pos = pos + updateTime * vel;
 }
 
 
@@ -254,11 +252,10 @@ list<VECTOR>::iterator Land::whereIs(VECTOR v)
 		if (abs((v.e1 - start->e1)*(end->e2 - start->e2) - (end->e1 - start->e1)*(v.e2 - start->e2)) < 1.0e-5)
 		{
 			double t = end->e1 == start->e1 ? (v.e2 - start->e2) / (end->e2 - start->e2) : (v.e1 - start->e1) / (end->e1 - start->e1);
-			if (t <= 1 && t >= 0)
+			if (t < 1 && t >= 0)
 				return start;
 		}
-		start++;
-		end++;
+		start++; end++;
 	}
 	return points.end();
 }
@@ -393,6 +390,10 @@ void Player::update()
 	}
 	else
 	{
+		list<VECTOR>::iterator imOn = pPlayerLand->whereIs(pos);
+		list<VECTOR>::iterator prevTo = next(imOn);
+		if (prevTo == pPlayerLand->points.end())
+			prevTo = pPlayerLand->points.begin();
 		if (pPlayerLand->isOn(pos + vel))
 			pos = pos + vel;
 	}
@@ -474,7 +475,7 @@ void Enemy::draw(HDC& hdc)
 
 void Enemy::update()
 {
-	pos = pos + vel;
+	GameObject::update();
 }
 
 VECTOR Enemy::collision(GameObject* obj)

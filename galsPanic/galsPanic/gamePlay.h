@@ -7,6 +7,8 @@ extern Land land;
 extern Player actor;
 extern Enemy enemy;
 
+void test();
+
 void MainMenu();
 void GameClear();
 void Run();

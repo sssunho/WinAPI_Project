@@ -1,5 +1,9 @@
 #include "framework.h"
+#include "controlTime.h"
 #include "gamePlay.h"
+
+TIMER updateTimer;
+double updateTime;
 
 extern HWND g_hWnd;
 extern void(*UPDATE)();
@@ -10,6 +14,30 @@ extern HBITMAP hClear;
 extern BITMAP bitLandScape;
 extern BITMAP bitTitle;
 extern BITMAP bitClear;
+
+
+void test()
+{
+	HDC hdc = GetDC(g_hWnd);
+
+	static TIMER time;
+
+	static VECTOR pos = { 100,100 };
+	static VECTOR vel = { 300, 300 };
+
+	double t = time.getElapsedTime() / 1000.0;
+	double r = 10;
+	if ( t > 0.001)
+	{
+		POINT po = POINT(pos);
+		pos = pos + t * vel;
+		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
+		time.set();
+	}
+
+
+	ReleaseDC(g_hWnd, hdc);
+}
 
 void initMenu()
 {
@@ -43,7 +71,7 @@ void initGame()
 	actor.setLand(&land);
 	actor.vel = { 0,0 };
 	enemy.pos = { 450, 400 };
-	enemy.vel = { 0.6, 0.8 };
+	enemy.vel = { 300, 300 };
 }
 
 void MainMenu()
@@ -73,64 +101,74 @@ void GameClear()
 void Run()
 {
 	HDC hdc = GetDC(g_hWnd);
+	static TIMER drawTimer;
 
-	static int cntTime = 0;
-	const int updateTime = 100;
-
+	updateTime = updateTimer.getElapsedTime() / 1000.0;
+	double drawTime = drawTimer.getElapsedTime() / 1000.0;
 
 	DIRECTION key = getDirectionKeyState();
 
 	playerContoller(key);
 
-	if (cntTime > updateTime) // update
+	if (updateTime > 0.001) // update
 	{
-		actor.update();
-		enemy.update();
-	}
+		//update : 
 
-	if (cntTime > updateTime) // collision
-	{
-		actor.collision(&actor);
-
-		if (actor.isInvading())
-			actor.collision(&enemy);
-
-		if (actor.isInvading())
 		{
-			VECTOR temp = land.collision(&actor);
-			if (temp != VECTOR({ 0, 0 }))
+			actor.update();
+			enemy.update();
+		}
+
+		//collision :
+
+		{	
+			if (actor.isInvading())
 			{
-				actor.endInvading(temp);
+				actor.collision(&enemy);
+				actor.collision(&actor);
 			}
+
+			if (actor.isInvading())
+			{
+				VECTOR temp = land.collision(&actor);
+				if (temp != VECTOR({ 0, 0 }))
+				{
+					actor.endInvading(temp);
+				}
+			}
+
+			VECTOR n = land.collision(&enemy);
+			if (n != VECTOR({ 0, 0 }))
+			{
+				double psi = n.getRad();
+				enemy.vel = enemy.vel.rotate(-psi);
+				enemy.vel.e1 = -enemy.vel.e1;
+				enemy.vel = enemy.vel.rotate(psi);
+			}
+			enemy.vel = enemy.collision(&enemy);
+
+			if (land.isIn(enemy.pos))
+			{
+				initGameClear();
+				UPDATE = GameClear;
+				return;
+			}
+
+			if (land.getArea() / double(areaOfWindow) > 0.6)
+			{
+				initGameClear();
+				UPDATE = GameClear;
+				return;
+			}
+
 		}
 
-		VECTOR n = land.collision(&enemy);
-		if (n != VECTOR({ 0, 0 }))
-		{
-			double psi = n.getRad();
-			enemy.vel = enemy.vel.rotate(-psi);
-			enemy.vel.e1 = -enemy.vel.e1;
-			enemy.vel = enemy.vel.rotate(psi);
-		}
-		enemy.vel = enemy.collision(&enemy);
-
-		if (land.isIn(enemy.pos))
-		{
-			initGameClear();
-			UPDATE = GameClear;
-			return;
-		}
-
-		if (land.getArea() / double(areaOfWindow) > 0.6)
-		{
-			initGameClear();
-			UPDATE = GameClear;
-			return;
-		}
+		updateTimer.set();
 
 	}
 
-	if (cntTime > updateTime) // draw
+
+	if (drawTime > 0.01) // draw
 	{
 		HDC buffer = CreateCompatibleDC(hdc);
 		HDC tempHDC = CreateCompatibleDC(hdc);
@@ -161,10 +199,10 @@ void Run()
 		DeleteDC(tempHDC);
 		DeleteDC(mask);
 		DeleteDC(buffer);
-		cntTime = 0;
+
+		drawTimer.set();
 
 	}
-	cntTime++;
 
 	ReleaseDC(g_hWnd, hdc);
 
