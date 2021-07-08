@@ -77,7 +77,6 @@ void Run()
 	static int cntTime = 0;
 	const int updateTime = 100;
 
-	actor.collision(&actor);
 
 	DIRECTION key = getDirectionKeyState();
 
@@ -91,8 +90,11 @@ void Run()
 
 	if (cntTime > updateTime) // collision
 	{
+		actor.collision(&actor);
+
 		if (actor.isInvading())
 			actor.collision(&enemy);
+
 		if (actor.isInvading())
 		{
 			VECTOR temp = land.collision(&actor);
@@ -101,6 +103,7 @@ void Run()
 				actor.endInvading(temp);
 			}
 		}
+
 		VECTOR n = land.collision(&enemy);
 		if (n != VECTOR({ 0, 0 }))
 		{
