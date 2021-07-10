@@ -480,11 +480,6 @@ void Player::update()
 				pos = next;
 			else if (t <= 0)
 				pos = *imOn;
-			if (!l.onLine(pos))
-			{
-				int i = 0;
-				i = 1234;
-			}
 		}
 		else
 		{
@@ -497,11 +492,6 @@ void Player::update()
 				pos = *prevTo;
 			else if (t <= 0)
 				pos = *imOn;
-			if (!l.onLine(pos))
-			{
-				int i = 0;
-				i = 1234;
-			}
 		}
 	}
 }

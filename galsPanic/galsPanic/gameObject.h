@@ -130,7 +130,7 @@ public:
 	void startInvading() { invading = !invading; pBorder = new Border; }
 	void endInvading(VECTOR endPoint); 
 	void pushBorderPoint(VECTOR v) { if (pBorder != NULL) pBorder->push_back(v); };
-	VECTOR getLastBorderPoint() { if (pBorder != NULL) return pBorder->getBack(); }
+	VECTOR getLastBorderPoint() { if (pBorder != NULL) return pBorder->getBack(); else return pPlayerLand->points.front(); }
 	int getBorderSize() { if (pBorder != NULL) return pBorder->getSize(); else return 0; }
 
 	virtual VECTOR collision(GameObject* obj);

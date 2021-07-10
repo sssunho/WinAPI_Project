@@ -159,6 +159,7 @@
     <ClInclude Include="gamePlay.h" />
     <ClInclude Include="interface.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="sprite.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VECTOR.h" />
   </ItemGroup>
@@ -169,6 +170,7 @@
     <ClCompile Include="gameObject.cpp" />
     <ClCompile Include="gamePlay.cpp" />
     <ClCompile Include="interface.cpp" />
+    <ClCompile Include="sprite.cpp" />
     <ClCompile Include="VECTOR.cpp" />
   </ItemGroup>
   <ItemGroup>
