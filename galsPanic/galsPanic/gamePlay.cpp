@@ -1,6 +1,12 @@
 #include "framework.h"
 #include "controlTime.h"
 #include "gamePlay.h"
+#include "sprite.h"
+#include <Ole2.h>
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus")
+
+using namespace Gdiplus;
 
 TIMER updateTimer;
 double updateTime;
@@ -18,8 +24,11 @@ extern BITMAP bitClear;
 
 void test()
 {
+	const int trans = 0xFF746E;
+	
+	
 	HDC hdc = GetDC(g_hWnd);
-
+	/*
 	static TIMER time;
 
 	static VECTOR pos = { 100,100 };
@@ -36,7 +45,22 @@ void test()
 	}
 
 
-	ReleaseDC(g_hWnd, hdc);
+	ReleaseDC(g_hWnd, hdc);*/
+
+	static Sprite test;
+	test.image = Image::FromFile(L"images\\chractor.png");
+	test.bx = 38;
+	test.by = 32;
+	test.cx = 11;
+	test.cy = 215;
+	test.nx = 7;
+	test.ny = 1;
+	test.frameDelay = 100;
+	test.animation = false;
+	test.animation = true;
+	test.draw(hdc, 10, 10);
+
+	ReleaseDC(g_hWnd, hdc);;
 }
 
 void initMenu()
@@ -78,7 +102,7 @@ void initGame()
 	actor.setLand(&land);
 	actor.vel = { 300, 300 };
 	enemy.pos = { 500, 300 };
-	enemy.vel = { -300, -300 };
+	//enemy.vel = { -300, -300 };
 	updateTimer.set();
 }
 
@@ -141,9 +165,8 @@ void Run()
 				VECTOR temp = land.collision(&actor);
 				if (temp != VECTOR({ 0, 0 }))
 				{
-					land.collision(&actor);
 					actor.endInvading(temp);
-				}
+	 			}
 			}
 
 			VECTOR n = land.collision(&enemy);

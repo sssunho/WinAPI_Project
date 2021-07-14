@@ -32,10 +32,23 @@ void Sprite::draw(HDC& hdc, int x, int y)
 		}
 		else
 			frameCnt++;
+
+		g.DrawImage(image,
+			Rect(x, y, bx, by),
+			cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny,
+			bx, by, UnitPixel);/*
+		if (attr.GetLastStatus() == Ok)
+			g.DrawImage(image,
+				Rect(x, y, bx, by),
+				cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny,
+				bx, by, UnitPixel, &attr);
+		else
+			g.DrawImage(image, x, y, cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny, bx, by, UnitPixel);*/
+		
 	}
 }
 
-void Sprite::animate(int _nx, int _ny, int delay)
+void Sprite::setAnimation(int _nx, int _ny, int delay)
 {
 	nx = _nx; ny = _ny; frameDelay = delay;
 	animation = true;

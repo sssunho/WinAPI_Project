@@ -6,6 +6,7 @@
 #include "controlTime.h"
 #include "collider.h"
 #include "interface.h"
+#include "sprite.h"
 #include <list>
 #include <Ole2.h>
 #include <gdiplus.h>
@@ -57,7 +58,7 @@ public:
 
 	void push_back(VECTOR v) { points.push_back(v); }
 	void removePoints(list<VECTOR>::iterator start, list<VECTOR>::iterator end);
-	list<VECTOR> append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints);
+	list<VECTOR> append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR> newPoints);
 	void append(Border* border);
 	double getArea();
 	bool isIn(VECTOR v);
@@ -83,6 +84,7 @@ public:
 	void push_back(VECTOR v) { points.push_back(v); }
 	VECTOR getFront() { return points.front(); }
 	VECTOR getBack() { return points.back(); }
+	void round();
 	int getSize() { return points.size(); }
 	void reset();
 };
@@ -90,12 +92,12 @@ public:
 class Actor : public GameObject
 {
 protected:
-	Image* sprite;
+	Sprite sprite;
 	DIRECTION direction;
 
 public:
 	Actor() : GameObject(), sprite(NULL), direction(DIRECTION::NONE) {};
-	Actor(WCHAR* filename) : GameObject(), direction(DIRECTION::NONE) { sprite = Image::FromFile(filename); }
+	Actor(WCHAR* filename) : GameObject(), direction(DIRECTION::NONE) { }
 	Actor(VECTOR v) : GameObject(), direction(DIRECTION::NONE), sprite(NULL) { pos = v; }
 
 	virtual void update() { GameObject::update(); };
@@ -105,8 +107,6 @@ public:
 	DIRECTION getDirection() { return direction; }
 	void setDirection(DIRECTION dir) { direction = dir; }
 
-
-	~Actor() { if (sprite != NULL) delete sprite; }
 };
 
 //==================================================================================
@@ -119,12 +119,18 @@ private:
 	int _time;
 	Land* pPlayerLand;
 	Border* pBorder;
+	int HP;
 	double r;
 	void resetInvading();
 
 public:
-	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL) { _time = 0; r = 10; };
-	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL) { pos = land->points.front(); _time = 0; r = 10; }
+	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL) 
+	{ 
+		_time = 0; r = 10;
+	};
+	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL)
+	{ pos = land->points.front(); _time = 0; r = 10; 
+	}
 	virtual void update();
 	bool isInvading() { return invading; }
 	void startInvading() { invading = !invading; pBorder = new Border; }
@@ -138,6 +144,9 @@ public:
 	void setLand(Land* land) { pPlayerLand = land; pos = pos = land->points.front(); }
 
 	void reset();
+
+	void initImage();
+	void damage();
 
 	~Player()
 	{

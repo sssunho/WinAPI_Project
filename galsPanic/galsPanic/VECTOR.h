@@ -80,6 +80,11 @@ public:
 		return temp;
 	}
 
+	VECTOR round()
+	{
+		return { ::round(e1), ::round(e2) };
+	}
+
 };
 
 template<typename T>

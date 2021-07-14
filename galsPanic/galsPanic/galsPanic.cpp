@@ -7,6 +7,11 @@
 #include "gamePlay.h"
 #include <iterator>
 #pragma comment(lib, "msimg32.lib")
+#include <Ole2.h>
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus")
+
+using namespace Gdiplus;
 
 #define MAX_LOADSTRING 100
 
@@ -55,10 +60,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GALSPANIC));
 
     MSG msg;
+	ULONG_PTR gpToken;
+	GdiplusStartupInput gpsi;
 
+	if (GdiplusStartup(&gpToken, &gpsi, NULL) != Ok) return 0;
+
+	initBitmaps();
 	initMenu();
 	UPDATE = MainMenu;
-
+	//UPDATE = test;
     // 기본 메시지 루프입니다:
     while (g_bLoop)
     {
@@ -70,9 +80,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		else
 		{
 			UPDATE();
-			//test();
 		}
     }
+
+	GdiplusShutdown(gpToken);
 
     return (int) msg.wParam;
 }
@@ -130,7 +141,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    g_hWnd = hWnd;
    GetClientRect(hWnd, &rectView);
-   initBitmaps();
 
 
    ShowWindow(hWnd, nCmdShow);

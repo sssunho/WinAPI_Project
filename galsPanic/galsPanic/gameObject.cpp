@@ -77,7 +77,7 @@ VECTOR Land::collision(GameObject* obj)
 	{
 		if (!isIn(temp->pos))
 			return { 0,0 };
-		VECTOR vtemp;
+ 		VECTOR vtemp;
 		list<VECTOR>::iterator start = points.begin();
 		list<VECTOR>::iterator end = next(start);
 		for (int i = 0; i < points.size(); i++)
@@ -88,7 +88,8 @@ VECTOR Land::collision(GameObject* obj)
 			LINE l2(temp->pos, temp->getLastBorderPoint());
 			if (getCrossPoint(&vtemp, l1, l2))
 			{
-				return vtemp;
+				if(vtemp != temp->getLastBorderPoint())
+  	 				return vtemp;
 			}
 			else if (l1.onLine(obj->pos) && temp->pBorder->getFront() != temp->pos)
 				return obj->pos;
@@ -140,14 +141,13 @@ void Land::removePoints(list<VECTOR>::iterator start, list<VECTOR>::iterator end
 	}
 }
 
-list<VECTOR> Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR>& newPoints)
+list<VECTOR> Land::append(list<VECTOR>::iterator start, list<VECTOR>::iterator end, list<VECTOR> newPoints)
 {
 	list<VECTOR>::iterator insStart = start == prev(points.end()) ? points.begin() : next(start);
 	list<VECTOR>::iterator insEnd = end == prev(points.end()) ? points.begin() : next(end);
 	list<VECTOR>::iterator it = insEnd;
 	list<VECTOR> rev = newPoints;
-
-
+	
 	if (insStart == insEnd)
 	{
 		if (Land(newPoints).isIn(*insStart))
@@ -211,6 +211,7 @@ void Land::append(Border* border)
 {
 	list<VECTOR>::iterator start = whereIs(border->getFront());
 	list<VECTOR>::iterator end = whereIs(border->getBack());
+	border->round();
 	append(start, end, border->points);
 	points.unique();
 	if (points.front() == points.back())
@@ -272,18 +273,12 @@ list<VECTOR>::iterator Land::whereIs(VECTOR v)
 	{
 		if (end == points.end())
 			end = points.begin();
-		if (abs((v.e1 - start->e1)*(end->e2 - start->e2) - (end->e1 - start->e1)*(v.e2 - start->e2)) < 1.0e-5)
+		if (abs((v.e1 - start->e1)*(end->e2 - start->e2) - (end->e1 - start->e1)*(v.e2 - start->e2)) < 1.0e-3)
 		{
 			double t = end->e1 == start->e1 ? (v.e2 - start->e2) / (end->e2 - start->e2) : (v.e1 - start->e1) / (end->e1 - start->e1);
 			if (t < 1 && t >= 0)
 				return start;
-		}
-		if (start == points.end())
-		{
-			int i = 0;
-			i = 1234;
-		}
-			
+		}			
 		start++; end++;
 	}
 	return points.end();
@@ -337,10 +332,13 @@ void Border::draw(HDC& hdc)
 	list<VECTOR>::iterator end = next(start);
 
 	HPEN hPen, oldPen;
+	POINT last = actor.getLastBorderPoint();
 
 	hPen = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
 
 	oldPen = (HPEN)SelectObject(hdc, hPen);
+
+	MoveToEx(hdc, last.x, last.y, NULL);
 
 	while (end != points.end())
 	{
@@ -350,6 +348,7 @@ void Border::draw(HDC& hdc)
 		LineTo(hdc, poEnd.x, poEnd.y);
 		start++; end++;
 	}
+	LineTo(hdc, actor.pos.e1, actor.pos.e2);
 
 	SelectObject(hdc, oldPen);
 
@@ -396,16 +395,21 @@ void Border::reset()
 		points.clear();
 }
 
+void Border::round()
+{
+	for (list<VECTOR>::iterator it = points.begin(); it != points.end(); it++)
+		*it = it->round();
+}
+
 //======================================================================================
 //										Actor
 //======================================================================================
 
 void Actor::draw(HDC& hdc)
 {
-	if (sprite != NULL)
+	if (sprite.image->GetLastStatus() == Gdiplus::Ok)
 	{
-		Graphics G(hdc);
-		G.DrawImage(sprite, 0, 0);
+
 	}
 	else
 	{
@@ -425,20 +429,35 @@ VECTOR Actor::collision(GameObject* obj)
 //										Player
 //======================================================================================
 
+void Player::initImage()
+{
+	if (sprite.image == NULL)
+	{
+		sprite.image = Image::FromFile(L"images\\chractor.png");
+		sprite.bx = 38; sprite.by = 32; sprite.cx = 11; sprite.cy = 215;
+		sprite.nx = 7; sprite.ny = 1;
+		sprite.frameDelay = 10;
+		sprite.animation = true;
+		sprite.attr.SetColorKey(Color(255, 116, 110), Color(255, 116, 110), ColorAdjustTypeBitmap);
+	}
+}
+
 void Player::draw(HDC& hdc)
 {
-	if (sprite != NULL)
+	POINT po = POINT(pos);
+	if (sprite.image->GetLastStatus() == Gdiplus::Ok)
 	{
-		Graphics G(hdc);
-		G.DrawImage(sprite, 0, 0);
+		sprite.draw(hdc, pos.e1 - 19.0, pos.e2 - 16.0);
 	}
 	else
 	{
-		POINT po = POINT(pos);
 		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
 	}
+
 	if (pBorder != NULL)
+	{
 		pBorder->draw(hdc);
+	}
 
 }
 
@@ -451,7 +470,7 @@ void Player::update()
 	else
 	{
 		list<VECTOR>::iterator imOn = pPlayerLand->whereIs(pos);
-		list<VECTOR>::iterator prevTo = next(imOn);
+		list<VECTOR>::iterator prevTo = imOn == prev(pPlayerLand->points.end()) ? pPlayerLand->points.begin() : next(imOn);
 		list<VECTOR>::iterator nextTo = imOn == pPlayerLand->points.begin() ? prev(pPlayerLand->points.end()) : prev(imOn);
 		if (prevTo == pPlayerLand->points.end())
 			prevTo = pPlayerLand->points.begin();
@@ -480,6 +499,7 @@ void Player::update()
 				pos = next;
 			else if (t <= 0)
 				pos = *imOn;
+
 		}
 		else
 		{
@@ -492,6 +512,7 @@ void Player::update()
 				pos = *prevTo;
 			else if (t <= 0)
 				pos = *imOn;
+			list<VECTOR>::iterator test = pPlayerLand->whereIs(pos);
 		}
 	}
 }
@@ -522,7 +543,7 @@ VECTOR Player::collision(GameObject* obj)
 void Player::resetInvading()
 {
 	invading = !invading;
-	pos = pBorder->getFront();
+	pos = pBorder->getFront(); 
 	delete pBorder;
 	pBorder = NULL;
 }
@@ -530,11 +551,11 @@ void Player::resetInvading()
 void Player::endInvading(VECTOR endPoint)
 {
 	invading = !invading;
+	pos = endPoint.round();
 
 	pBorder->push_back(endPoint);
 	pPlayerLand->append(pBorder);
-
-	pos = endPoint;
+	vel = { 0,0 };
 
 	delete pBorder;
 	pBorder = NULL;
@@ -553,13 +574,18 @@ void Player::reset()
 	vel = { 0,0 };
 }
 
+void Player::damage()
+{
+	HP--;
+}
+
 //======================================================================================
 //										Enemy
 //======================================================================================
 
 void Enemy::draw(HDC& hdc)
 {
-	if (sprite != NULL)
+	if (sprite.image != NULL && sprite.image->GetLastStatus() == Gdiplus::Ok)
 	{
 
 	}
