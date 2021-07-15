@@ -21,35 +21,50 @@ Sprite::Sprite(const WCHAR* path, int _cx, int _cy, int _bx, int _by) : cx(_cx),
 void Sprite::draw(HDC& hdc, int x, int y)
 {
 	Graphics g(hdc);
+	if (image == NULL)
+		return;
+	else if (image->GetLastStatus() != Ok)
+		return;
 	if (!animation)
 		g.DrawImage(image, x, y, cx, cy, bx, by, UnitPixel);
 	else
 	{
-		if ((frameCnt + 1) % frameDelay == 0)
-		{
-			frameCnt = 0;
-			frame++;
-		}
-		else
-			frameCnt++;
-
+		if(playing)
+			updateFrame();
 		g.DrawImage(image,
 			Rect(x, y, bx, by),
 			cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny,
-			bx, by, UnitPixel);/*
-		if (attr.GetLastStatus() == Ok)
-			g.DrawImage(image,
-				Rect(x, y, bx, by),
-				cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny,
-				bx, by, UnitPixel, &attr);
-		else
-			g.DrawImage(image, x, y, cx + (frame % nx) * bx, cy + ((frame / nx) % ny)*ny, bx, by, UnitPixel);*/
+			bx, by, UnitPixel);
 		
 	}
 }
 
-void Sprite::setAnimation(int _nx, int _ny, int delay)
+void Sprite::updateFrame()
 {
-	nx = _nx; ny = _ny; frameDelay = delay;
-	animation = true;
+	if ((frameCnt + 1) % frameDelay == 0)
+	{
+		frameCnt = 0;
+		frame++;
+	}
+	else
+		frameCnt++;
+
+	if (frame >= n)
+	{
+		frame = 0;
+		if (!repeat) playing = false;
+	}
+
+}
+
+void Sprite::setSprite(int cx, int cy, int bx, int by)
+{
+	Sprite::cx = cx; Sprite::cy = cy;
+	Sprite::bx = bx; Sprite::by = by;
+}
+
+void Sprite::setAnimation(int n, int nx, int ny, int delay)
+{
+	frame = 0; frameDelay = 0; animation = true;
+	Sprite::n = n; Sprite::nx = nx; Sprite::ny = ny; frameDelay = delay;
 }

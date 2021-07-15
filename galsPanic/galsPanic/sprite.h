@@ -10,7 +10,7 @@ using namespace Gdiplus;
 
 class Sprite
 {
-public:
+private:
 	Image* image;
 	int cx;
 	int cy;
@@ -18,10 +18,12 @@ public:
 	int by;
 	int nx;
 	int ny;
+	int n;
 	int frame;
 	int frameCnt;
 	int frameDelay;
 	bool animation;
+	bool playing;
 	bool repeat;
 	void updateFrame();
 
@@ -32,11 +34,14 @@ public:
 	void setFrame(int f) { frame = f; }
 	void setFrameCount(int n) { frameCnt = n; }
 	bool delayFrame(int n) { frameDelay = n; }
-	void setAnimation(int _nx, int _ny, int delay = 2);
-	void play();
-	void pause();
-	bool isPlaying();
+	void play() { playing = true; };
+	void pause() { playing = false; }
+	bool isPlaying() { return playing; }
+	void setSprite(int cx, int cy, int bx, int by);
+	void setAnimation(int n, int nx, int ny = 1, int delay = 10);
+	void setRepeat() { repeat = !repeat; }
+	void setImage(const WCHAR* path) { image = Image::FromFile(path); }
+	Status isLoaded() { if (image == NULL) return Status::GenericError; return image->GetLastStatus(); }
 
 };
-
 #endif

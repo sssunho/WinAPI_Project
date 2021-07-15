@@ -47,19 +47,6 @@ void test()
 
 	ReleaseDC(g_hWnd, hdc);*/
 
-	static Sprite test;
-	test.image = Image::FromFile(L"images\\chractor.png");
-	test.bx = 38;
-	test.by = 32;
-	test.cx = 11;
-	test.cy = 215;
-	test.nx = 7;
-	test.ny = 1;
-	test.frameDelay = 100;
-	test.animation = false;
-	test.animation = true;
-	test.draw(hdc, 10, 10);
-
 	ReleaseDC(g_hWnd, hdc);;
 }
 
@@ -83,27 +70,19 @@ void initGame()
 			break;
 	actor.reset();
 	land.reset();
-	enemy.reset();/*
+	enemy.reset();
 	land.push_back({ 100,100 });
-	land.push_back({ 100,300 });
-	land.push_back({ 150,300 });
+	land.push_back({ 100,150 });
 	land.push_back({ 150,150 });
-	land.push_back({ 200,150 });
-	land.push_back({ 200,300 });
-	land.push_back({ 250,300 });
-	land.push_back({ 250,100 });*/
-
-
-	land.push_back({ 100,100 });
-	land.push_back({ 100,300 });
-	land.push_back({ 300,300 });
+	land.push_back({ 150,100 });
 
 
 	actor.setLand(&land);
 	actor.vel = { 300, 300 };
 	enemy.pos = { 500, 300 };
-	//enemy.vel = { -300, -300 };
+	enemy.vel = { -300, -300 };
 	updateTimer.set();
+	actor.setHP(3);
 }
 
 void MainMenu()
@@ -224,7 +203,16 @@ void Run()
 		actor.draw(buffer);
 		enemy.draw(buffer);
 
+		Graphics g(buffer);
+		Image* heart = Image::FromFile(L"images\\heart.png");
+		for (int i = 0; i < actor.getHP(); i++)
+		{
+			g.DrawImage(heart, 10 + 40 * i, 10);
+		}
+		delete heart;
+
 		BitBlt(hdc, 0, 0, bx, by, buffer, 0, 0, SRCCOPY);
+
 
 		DeleteObject(tempbit);
 		DeleteObject(bufbit);

@@ -407,16 +407,6 @@ void Border::round()
 
 void Actor::draw(HDC& hdc)
 {
-	if (sprite.image->GetLastStatus() == Gdiplus::Ok)
-	{
-
-	}
-	else
-	{
-		int r = 10;
-		POINT po = POINT(pos);
-		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
-	}
 }
 
 VECTOR Actor::collision(GameObject* obj)
@@ -431,21 +421,20 @@ VECTOR Actor::collision(GameObject* obj)
 
 void Player::initImage()
 {
-	if (sprite.image == NULL)
+	if (sprite.isLoaded() != Ok)
 	{
-		sprite.image = Image::FromFile(L"images\\chractor.png");
-		sprite.bx = 38; sprite.by = 32; sprite.cx = 11; sprite.cy = 215;
-		sprite.nx = 7; sprite.ny = 1;
-		sprite.frameDelay = 10;
-		sprite.animation = true;
-		sprite.attr.SetColorKey(Color(255, 116, 110), Color(255, 116, 110), ColorAdjustTypeBitmap);
+		sprite.setImage(L"images\\chractor.png");
+		sprite.setSprite(11, 215, 38, 32);
+		sprite.setAnimation(7, 7);
+		sprite.setRepeat();
+		sprite.play();
 	}
 }
 
 void Player::draw(HDC& hdc)
 {
 	POINT po = POINT(pos);
-	if (sprite.image->GetLastStatus() == Gdiplus::Ok)
+	if (sprite.isLoaded() == Gdiplus::Ok)
 	{
 		sprite.draw(hdc, pos.e1 - 19.0, pos.e2 - 16.0);
 	}
@@ -463,6 +452,26 @@ void Player::draw(HDC& hdc)
 
 void Player::update()
 {
+	static int cnt = 0;
+	if (damaged)
+	{
+		if (sprite.isPlaying())
+		{
+			return;
+		}
+		if (cnt > 10)
+		{
+			cnt = 0;
+			damaged = false;
+			sprite.setSprite(11, 215, 38, 32);
+			sprite.setAnimation(7, 7);
+			sprite.play();
+			sprite.setRepeat();
+			resetInvading();
+		}
+		cnt++;
+		return;
+	}
 	if (invading)
 	{
 		pos = pos + updateTime*vel;
@@ -525,16 +534,18 @@ VECTOR Player::collision(GameObject* obj)
 		{
 			bool outOfRect = pos.e1 < rectView.left || pos.e1 > rectView.right || pos.e2 < rectView.top || pos.e2 > rectView.bottom;
 			VECTOR check = pBorder->collision(this);
-			if (pBorder->collision(this) != VECTOR({ 0, 0 }) || outOfRect)
+			if ((pBorder->collision(this) != VECTOR({ 0, 0 }) || outOfRect) && !damaged)
 			{
-				resetInvading();
+				damage();
 			}
 		}
 	}
 	else if (Enemy* pEnemy = dynamic_cast<Enemy*>(obj))
 	{
-		if ((pos - pEnemy->pos).getScalar() < r + pEnemy->getR())
-			resetInvading();
+		if ((pos - pEnemy->pos).getScalar() < r + pEnemy->getR() && !damaged)
+		{
+			damage();
+		}
 	}
 
 	return { 0,0 };
@@ -576,6 +587,10 @@ void Player::reset()
 
 void Player::damage()
 {
+	sprite.setSprite(115, 250, 40, 40);
+	sprite.setAnimation(4, 4);
+	sprite.setRepeat();
+	damaged = true;
 	HP--;
 }
 
@@ -585,7 +600,7 @@ void Player::damage()
 
 void Enemy::draw(HDC& hdc)
 {
-	if (sprite.image != NULL && sprite.image->GetLastStatus() == Gdiplus::Ok)
+	if (sprite.isLoaded() == Ok)
 	{
 
 	}
@@ -633,5 +648,5 @@ VECTOR Enemy::collision(GameObject* obj)
 
 void Enemy::reset()
 {
-
+	
 }

@@ -116,6 +116,7 @@ class Player : public Actor
 	friend class Land;
 private:
 	bool invading;
+	bool damaged;
 	int _time;
 	Land* pPlayerLand;
 	Border* pBorder;
@@ -124,11 +125,11 @@ private:
 	void resetInvading();
 
 public:
-	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL) 
+	Player() : Actor(), invading(false), pPlayerLand(NULL), pBorder(NULL), damaged(false)
 	{ 
 		_time = 0; r = 10;
 	};
-	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL)
+	Player(Land* land) : Actor(), invading(false), pPlayerLand(land), pBorder(NULL), damaged(false)
 	{ pos = land->points.front(); _time = 0; r = 10; 
 	}
 	virtual void update();
@@ -147,6 +148,8 @@ public:
 
 	void initImage();
 	void damage();
+	int getHP() { return HP; }
+	void setHP(int i) { HP = i; }
 
 	~Player()
 	{
