@@ -348,7 +348,9 @@ void Border::draw(HDC& hdc)
 		LineTo(hdc, poEnd.x, poEnd.y);
 		start++; end++;
 	}
-	LineTo(hdc, actor.pos.e1, actor.pos.e2);
+	MoveToEx(hdc, POINT(*start).x, POINT(*start).y, NULL);
+	POINT p = (POINT)actor.pos;
+	LineTo(hdc, p.x, p.y);
 
 	SelectObject(hdc, oldPen);
 
@@ -419,17 +421,6 @@ VECTOR Actor::collision(GameObject* obj)
 //										Player
 //======================================================================================
 
-void Player::initImage()
-{
-	if (sprite.isLoaded() != Ok)
-	{
-		sprite.setImage(L"images\\chractor.png");
-		sprite.setSprite(11, 215, 38, 32);
-		sprite.setAnimation(7, 7);
-		sprite.setRepeat();
-		sprite.play();
-	}
-}
 
 void Player::draw(HDC& hdc)
 {
@@ -459,14 +450,14 @@ void Player::update()
 		{
 			return;
 		}
-		if (cnt > 10)
+ 		if (cnt > 10)
 		{
 			cnt = 0;
 			damaged = false;
 			sprite.setSprite(11, 215, 38, 32);
 			sprite.setAnimation(7, 7);
 			sprite.play();
-			sprite.setRepeat();
+			sprite.setRepeat(true);
 			resetInvading();
 		}
 		cnt++;
@@ -589,7 +580,7 @@ void Player::damage()
 {
 	sprite.setSprite(115, 250, 40, 40);
 	sprite.setAnimation(4, 4);
-	sprite.setRepeat();
+	sprite.setRepeat(false);
 	damaged = true;
 	HP--;
 }
@@ -602,7 +593,7 @@ void Enemy::draw(HDC& hdc)
 {
 	if (sprite.isLoaded() == Ok)
 	{
-
+		sprite.draw(hdc, pos.e1 - 52/2, pos.e2 - 50/2);
 	}
 	else
 	{
@@ -645,8 +636,57 @@ VECTOR Enemy::collision(GameObject* obj)
 	}
 	return { 0,0 };
 }
-
 void Enemy::reset()
 {
-	
+
+}
+
+
+//======================================================================================
+//										Bomb
+//======================================================================================
+
+void Bomb::draw(HDC& hdc)
+{
+	if (sprite.isLoaded() == Ok)
+		sprite.draw(hdc, pos.e1 - 16, pos.e2 - 16);
+}
+
+Bomb::Bomb(VECTOR v)
+{
+	sprite.setImage(L"images\\enemy.png");
+	sprite.setSprite(155, 285, 33, 32);
+	sprite.setAnimation(16, 8, 2);
+	sprite.setRepeat(true);
+	sprite.play();
+	vel = 100 * (actor.pos - v).getUnit();
+	exploded = false;  pos = v; r = 10;
+}
+
+void Bomb::update()
+{
+	Enemy::update();
+	if (!exploded)
+	{
+		if (getElapsedTime() % 50 == 0)
+			vel = 100 * (actor.pos - pos).getUnit();
+		if (getElapsedTime() > 5 * 1000)
+			explode();
+	}
+	else if (getElapsedTime() > 400)
+	{
+		destroy();
+	}
+}
+
+void Bomb::explode()
+{
+	exploded = true;
+	time.set();
+	sprite.releaseImage();
+	sprite.setImage(L"images\\effect.png");
+	sprite.setSprite(241, 20, 39, 50);
+	sprite.setAnimation(8, 8);
+	sprite.delayFrame(5);
+	sprite.setRepeat(false);
 }

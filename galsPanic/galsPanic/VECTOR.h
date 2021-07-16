@@ -75,7 +75,7 @@ public:
 	operator POINT()
 	{
 		int x = int(e1 < 0 ? e1 - 0.5 : e1 + 0.5);
-		int y = int(e2 < 0 ? e1 - 0.5 : e2 + 0.5);
+		int y = int(e2 < 0 ? e2 - 0.5 : e2 + 0.5);
 		POINT temp = { x, y };
 		return temp;
 	}

@@ -22,7 +22,6 @@ void initBitmaps()
 	hClear = (HBITMAP)LoadImage(NULL, TEXT("images/win.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 	GetObject(hClear, sizeof(BITMAP), &bitClear);
 
-	actor.initImage();
 }
 
 

@@ -11,6 +11,11 @@ using namespace Gdiplus;
 TIMER updateTimer;
 double updateTime;
 
+typedef list<VECTOR>::iterator vIter;
+typedef list<Actor*>::iterator aIter;
+
+list<Actor*> actorList;
+
 extern HWND g_hWnd;
 extern void(*UPDATE)();
 
@@ -24,34 +29,11 @@ extern BITMAP bitClear;
 
 void test()
 {
-	const int trans = 0xFF746E;
-	
-	
-	HDC hdc = GetDC(g_hWnd);
-	/*
-	static TIMER time;
-
-	static VECTOR pos = { 100,100 };
-	static VECTOR vel = { 300, 300 };
-
-	double t = time.getElapsedTime() / 1000.0;
-	double r = 10;
-	if ( t > 0.001)
-	{
-		POINT po = POINT(pos);
-		pos = pos + t * vel;
-		Ellipse(hdc, po.x - r, po.y - r, po.x + r, po.y + r);
-		time.set();
-	}
-
-
-	ReleaseDC(g_hWnd, hdc);*/
-
-	ReleaseDC(g_hWnd, hdc);;
 }
 
 void initMenu()
 {
+	actor.spriteClear();
 	InvalidateRect(g_hWnd, 0, true);
 }
 
@@ -60,11 +42,13 @@ void initGameClear()
 	actor.reset();
 	land.reset();
 	enemy.reset();
+	actor.spriteClear();
 	InvalidateRect(g_hWnd, 0, true);
 }
 
 void initGame()
 {
+	actorList.clear();
 	while (1)
 		if (!(GetAsyncKeyState(VK_SPACE) & 0x8001))
 			break;
@@ -75,8 +59,28 @@ void initGame()
 	land.push_back({ 100,150 });
 	land.push_back({ 150,150 });
 	land.push_back({ 150,100 });
+	if (actor.spriteIsLoaded() != Ok)
+	{
+		actor.spriteSetImage(L"images\\chractor.png");
+		actor.spriteSet(11, 215, 38, 32);
+		actor.animationSet(7, 7);
+		actor.animationRepeat(true);
+		actor.animationPlay();
+	}
 
-
+	if (enemy.spriteIsLoaded() != Ok)
+	{
+		enemy.spriteSetImage(L"images\\enemy.png");
+		enemy.spriteSet(8, 82, 52, 50);
+		enemy.animationSet(5, 5, 4);
+		enemy.animationRepeat(true);
+		enemy.animationPlay();
+	}
+	Bomb* test;
+	actorList.push_back(new Bomb(VECTOR(300, 300)));
+	actorList.push_back(new Bomb(VECTOR(400, 300)));
+	actorList.push_back(new Bomb(VECTOR(500, 300)));
+	
 	actor.setLand(&land);
 	actor.vel = { 300, 300 };
 	enemy.pos = { 500, 300 };
@@ -104,7 +108,7 @@ void GameClear()
 
 	SelectObject(image, hClear);
 	BitBlt(hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, image, 0, 0, SRCCOPY);
-
+	
 	DeleteDC(image);
 	ReleaseDC(g_hWnd, hdc);
 }
@@ -120,6 +124,7 @@ void Run()
 	DIRECTION key = getDirectionKeyState();
 
 	playerContoller(key);
+	enemyControl();
 
 	if (updateTime > 0.001) // update
 	{
@@ -128,6 +133,8 @@ void Run()
 		{
 			actor.update();
 			enemy.update();
+			for (aIter it = actorList.begin(); it != actorList.end(); it++)
+				(*it)->update();
 		}
 
 		//collision :
@@ -158,6 +165,19 @@ void Run()
 			}
 			enemy.vel = enemy.collision(&enemy);
 
+			for (aIter it = actorList.begin(); it != actorList.end(); it++)
+			{
+				VECTOR n = land.collision((*it));
+				if (n != VECTOR({ 0, 0 }))
+				{
+					if (Bomb* p = dynamic_cast<Bomb*>(*it))
+						if(!p->isExploding()) 
+							p->explode();
+				}
+				(*it)->vel = (*it)->collision((*it));
+
+			}
+
 			if (land.isIn(enemy.pos))
 			{
 				initGameClear();
@@ -172,6 +192,20 @@ void Run()
 				return;
 			}
 
+		}
+
+		if (actor.getHP() <= 0 && !actor.isDamaged())
+		{
+			initMenu();
+			UPDATE = MainMenu;
+		}
+
+		for (aIter it = actorList.begin(); it != actorList.end();)
+		{
+			if ((*it)->isDestroyed())
+				it = actorList.erase(it);
+			else
+				it++;
 		}
 
 		updateTimer.set();
@@ -202,6 +236,8 @@ void Run()
 
 		actor.draw(buffer);
 		enemy.draw(buffer);
+		for (aIter it = actorList.begin(); it != actorList.end(); it++)
+			(*it)->draw(buffer);
 
 		Graphics g(buffer);
 		Image* heart = Image::FromFile(L"images\\heart.png");
@@ -226,4 +262,23 @@ void Run()
 
 	ReleaseDC(g_hWnd, hdc);
 
+}
+
+void enemyControl()
+{
+	int action = 0;
+	if (enemy.getElapsedTime() > 1000 * 5)
+	{
+		VECTOR vel;
+		action = rand() % 3;
+		switch (action)
+		{
+		case 0:
+			break;
+		case 1:
+			break;
+		case 2:
+			break;
+		}
+	}
 }

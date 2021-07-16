@@ -36,6 +36,9 @@ public:
 
 	GameObject() : time(), pos({ 0,0 }), vel({ 0,0 }) {};
 
+	clock_t getElapsedTime() { return time.getElapsedTime(); }
+	void setTimer() { time.set(); }
+
 	virtual void update();
 	virtual void draw(HDC& hdc) = 0;
 	virtual VECTOR collision(GameObject* obj) = 0;
@@ -94,11 +97,12 @@ class Actor : public GameObject
 protected:
 	Sprite sprite;
 	DIRECTION direction;
+	bool destroyed;
 
 public:
-	Actor() : GameObject(), sprite(NULL), direction(DIRECTION::NONE) {};
-	Actor(WCHAR* filename) : GameObject(), direction(DIRECTION::NONE) { }
-	Actor(VECTOR v) : GameObject(), direction(DIRECTION::NONE), sprite(NULL) { pos = v; }
+	Actor() : GameObject(), direction(DIRECTION::NONE), sprite(), destroyed(false) {};
+	Actor(WCHAR* filename) : GameObject(), direction(DIRECTION::NONE), sprite(), destroyed(false) { }
+	Actor(VECTOR v) : GameObject(), direction(DIRECTION::NONE), sprite(), destroyed(false) { pos = v; }
 
 	virtual void update() { GameObject::update(); };
 	virtual void draw(HDC& hdc);
@@ -106,7 +110,24 @@ public:
 
 	DIRECTION getDirection() { return direction; }
 	void setDirection(DIRECTION dir) { direction = dir; }
+	bool isSpritePlaying() { return sprite.isPlaying(); }
 
+	void spriteSet(int cx, int cy, int bx, int by) { sprite.setSprite(cx, cy, bx, by); };
+	void spriteSetImage(const WCHAR* path) { sprite.setImage(path); };
+	Status spriteIsLoaded() { return sprite.isLoaded(); }
+	void spriteClear() { sprite.releaseImage(); }
+
+	void animationSet(int n, int nx, int ny = 1, int delay = 10) 
+	{
+		sprite.setAnimation(n, nx, ny, delay);
+	};
+	void animationRepeat(bool flag) { sprite.setRepeat(flag); }
+	void animationPlay() { sprite.play(); };
+	bool animationIsPlaying() { return sprite.isPlaying(); };
+
+	void destroy() { destroyed = true; }
+	bool isDestroyed() { return destroyed; }
+	
 };
 
 //==================================================================================
@@ -145,11 +166,10 @@ public:
 	void setLand(Land* land) { pPlayerLand = land; pos = pos = land->points.front(); }
 
 	void reset();
-
-	void initImage();
 	void damage();
 	int getHP() { return HP; }
 	void setHP(int i) { HP = i; }
+	bool isDamaged() { return damaged; }
 
 	~Player()
 	{
@@ -161,7 +181,7 @@ public:
 
 class Enemy : public Actor
 {
-private:
+protected:
 	double r;
 public:
 	Enemy() : Actor() { r = 30; };
@@ -171,6 +191,21 @@ public:
 	virtual void draw(HDC& hdc);
 	double getR() { return r; }
 	void reset();
+};
+
+class Bomb : public Enemy
+{
+private:
+	bool exploded;
+public:
+	Bomb() : Enemy(), exploded(false) { r = 15; };
+	Bomb(VECTOR v);
+
+	virtual void draw(HDC& hdc);
+	virtual void update();
+	bool isExploding() { return exploded; }
+
+	void explode();
 };
 
 #endif

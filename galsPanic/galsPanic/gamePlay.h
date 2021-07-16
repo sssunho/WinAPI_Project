@@ -12,6 +12,7 @@ void test();
 void MainMenu();
 void GameClear();
 void Run();
+void enemyControl();
 void initGame();
 void initMenu();
 void initGameClear();

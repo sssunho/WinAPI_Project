@@ -33,14 +33,15 @@ public:
 	void draw(HDC& hdc, int x, int y);
 	void setFrame(int f) { frame = f; }
 	void setFrameCount(int n) { frameCnt = n; }
-	bool delayFrame(int n) { frameDelay = n; }
+	void delayFrame(int n) { frameDelay = n; }
 	void play() { playing = true; };
 	void pause() { playing = false; }
 	bool isPlaying() { return playing; }
 	void setSprite(int cx, int cy, int bx, int by);
 	void setAnimation(int n, int nx, int ny = 1, int delay = 10);
-	void setRepeat() { repeat = !repeat; }
+	void setRepeat(bool flag) { repeat = flag; }
 	void setImage(const WCHAR* path) { image = Image::FromFile(path); }
+	void releaseImage() { if (isLoaded() == Ok) { delete image; image = NULL; } }
 	Status isLoaded() { if (image == NULL) return Status::GenericError; return image->GetLastStatus(); }
 
 };
