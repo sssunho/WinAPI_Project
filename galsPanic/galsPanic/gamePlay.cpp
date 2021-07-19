@@ -27,6 +27,7 @@ extern BITMAP bitTitle;
 extern BITMAP bitClear;
 
 
+
 void test()
 {
 }
@@ -75,12 +76,7 @@ void initGame()
 		enemy.animationSet(5, 5, 4);
 		enemy.animationRepeat(true);
 		enemy.animationPlay();
-	}
-	Bomb* test;
-	actorList.push_back(new Bomb(VECTOR(300, 300)));
-	actorList.push_back(new Bomb(VECTOR(400, 300)));
-	actorList.push_back(new Bomb(VECTOR(500, 300)));
-	
+	}	
 	actor.setLand(&land);
 	actor.vel = { 300, 300 };
 	enemy.pos = { 500, 300 };
@@ -124,10 +120,13 @@ void Run()
 	DIRECTION key = getDirectionKeyState();
 
 	playerContoller(key);
-	enemyControl();
 
 	if (updateTime > 0.001) // update
 	{
+		//Event control:
+
+		enemyControl();
+
 		//update : 
 
 		{
@@ -203,7 +202,10 @@ void Run()
 		for (aIter it = actorList.begin(); it != actorList.end();)
 		{
 			if ((*it)->isDestroyed())
+			{	
+				delete *it;
 				it = actorList.erase(it);
+			}
 			else
 				it++;
 		}
@@ -266,19 +268,72 @@ void Run()
 
 void enemyControl()
 {
-	int action = 0;
-	if (enemy.getElapsedTime() > 1000 * 5)
+	static VECTOR oldVel;
+	static int state = -1;
+	static int count = 0;
+	static bool flag = false;
+
+	if (enemy.getElapsedTime() > 1000 * 2 && state == -1)
 	{
 		VECTOR vel;
-		action = rand() % 3;
-		switch (action)
+		state = 1;//rand() % 3;
+		enemy.setTimer();
+	}
+
+	switch (state)
+	{
+	case 0:
+		if (enemy.getElapsedTime() > 400)
 		{
-		case 0:
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
+			actorList.push_back(new Bomb(enemy.pos));
+			count++;
+			enemy.setTimer();
+			if (count > 5)
+			{
+				count = 0;
+				state = -1;
+				enemy.setTimer();
+			}
 		}
+		break;
+
+	case 1:
+		if (!flag)
+		{
+			oldVel = enemy.vel;
+			enemy.vel = { 0,0 };
+			flag = !flag;
+		}
+		if (enemy.getElapsedTime() > 3000)
+		{
+			enemy.vel = oldVel;
+			state = -1;
+			enemy.setTimer();
+			flag = !flag;
+		}
+		else
+		{
+			enemyBeam();
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void enemyBeam()
+{
+	static TIMER time;
+	static bool flag = false;
+	static HDC hdc;
+	static Sprite effect;
+	if (!flag)
+	{
+		hdc = GetDC(g_hWnd);
+		effect.setImage(L"images\\Fire4.png");
+	}
+	if (time.getElapsedTime() > 100)
+	{
+		Graphics g(hdc);
 	}
 }

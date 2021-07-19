@@ -659,7 +659,8 @@ Bomb::Bomb(VECTOR v)
 	sprite.setAnimation(16, 8, 2);
 	sprite.setRepeat(true);
 	sprite.play();
-	vel = 100 * (actor.pos - v).getUnit();
+	vel = { 0,0 };
+	//vel = 100 * (actor.pos - v).getUnit();
 	exploded = false;  pos = v; r = 10;
 }
 
@@ -668,9 +669,9 @@ void Bomb::update()
 	Enemy::update();
 	if (!exploded)
 	{
-		if (getElapsedTime() % 50 == 0)
-			vel = 100 * (actor.pos - pos).getUnit();
-		if (getElapsedTime() > 5 * 1000)
+		if (vel == VECTOR({0, 0}) && getElapsedTime() > 1000)
+			vel = 400 * (actor.pos - pos).getUnit();
+		if (getElapsedTime() > 4 * 1000)
 			explode();
 	}
 	else if (getElapsedTime() > 400)
@@ -682,6 +683,7 @@ void Bomb::update()
 void Bomb::explode()
 {
 	exploded = true;
+	vel = { 0,0 };
 	time.set();
 	sprite.releaseImage();
 	sprite.setImage(L"images\\effect.png");

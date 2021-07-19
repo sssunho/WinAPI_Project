@@ -117,7 +117,7 @@ public:
 	Status spriteIsLoaded() { return sprite.isLoaded(); }
 	void spriteClear() { sprite.releaseImage(); }
 
-	void animationSet(int n, int nx, int ny = 1, int delay = 10) 
+	void animationSet(int n, int nx, int ny = 1, int delay = 10)
 	{
 		sprite.setAnimation(n, nx, ny, delay);
 	};
@@ -127,6 +127,11 @@ public:
 
 	void destroy() { destroyed = true; }
 	bool isDestroyed() { return destroyed; }
+
+	~Actor()
+	{
+		sprite.releaseImage();
+	}
 	
 };
 
